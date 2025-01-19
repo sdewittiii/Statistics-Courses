@@ -1,0 +1,130 @@
+---
+header-includes:
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# V-1. Standard Scores and the Normal Distribution 
+
+1. Characteristics of the normal distribution  
+2. Standard scores  
+3. Sampling distributions  
+4. Central limit theorem  
+5. Standard score for a sample mean  
+
+**Characteristics of the Normal Distribution**
+
+* The normal distribution, as is the case with any probability distribution, is defined by two parameters: $\mu$ (population mean) determines the location of the distribution and $\sigma$ (population standard deviation) determines the shape of the distribution.  
+
+* The normal distribution has three important features:
+    + Symmetrical -- a vertical line through the center of the distribution (at $\mu$) produces equal halves. 
+    + Unimodal -- only one peak to the distribution (i.e., one mode). 
+    + Constant area -- no matter the shape of the distribution (i.e., regardless of its standard deviation), there is a constant probability under the curve between the mean and any given distance from the mean measured in standard deviation units.
+* This last feature is an especially important one. We know that the area that lies under the normal curve contains 100 percent of all cases and we know that the vertical line representing the mean splits the distribution into two equal halves. We also know that 68.26 $(2\text{ x }0.3413)$ percent of all cases lie within one standard deviation of the mean; 95.44 $(2\text{ x }0.4772)$ percent of all cases lie within two standard deviations of the mean; and 99.74 $(2\text{ x }0.4987)$ percent of all cases lie within three standard deviations of the mean.  
+
+**Standard Scores**
+
+* One disadvantage of the normal distribution is that no two are exactly alike. This is because each distribution is defined by its mean and standard deviation. Thus, it is difficult to compare individual scores within and across distributions. Lucky for us, all we have to do is take a simple transformation that will allow us to do this. We have to standardize our data in this was:  $$z=\frac{\text{x}-\mu}{\sigma}$$
+
+* This formula produces a z-score for individual cases in a distribution. The resulting z-score tells us the number of standard deviation units that a particular case lies from the mean. The sign tells us whether a case lies above or below the mean and the magnitude tells us how many standard deviation units lie between this observation and the mean. Standardizing scores within any distribution results in the standard normal distribution, or the z-distribution, with mean 0 and standard deviation 1. By standardizing, we are creating a universal (i.e., standard) metric that can be compared across different scales of measurement.  
+
+\newpage 
+
+* The nice thing about standard scores is that we can use a z-table to determine the probability that lies between any two values. This means that we can calculate the probability of observing events.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccc}
+\hline
+$z$-score & Area between $\mu$ and $z$  & Area beyond $z$ \\ \hline
+0.00  & .0000   & .5000   \\
+0.50  & .1915   & .3085   \\
+1.00  & .3413   & .1587   \\
+1.50  & .4332   & .0668   \\
+2.00  & .4772   & .0228   \\
+2.50  & .4938   & .0062   \\
+3.00  & .4987   & .0013   \\
+3.50  & .4998   & .0002   \\
+4.00  & .49997  & .00003  \\ \hline
+\end{tabular}
+\end{table}
+
+* Let's say that the highway patrol has collected data on the speed of cars traveling past a certain checkpoint. They find that the speed of cars traveling past the checkpoint is normally distributed, with average speed limit $\mu = 60.3$ and standard deviation $\sigma = 6.5$.  \newline
+
+    + $\displaystyle \text{x}=70 => \frac{70-60.3}{6.5} = 1.49 => p(\text{x}>70)=p(z>1.49) = .0681$ \newline \newline
+    + $\displaystyle \text{x}=53=>\frac{53-60.3}{6.5}=\frac{-7.3}{6.5} = -1.12=>p(\text{x}<53)=p(z<-1.12)=.1314$ \newline \newline
+    + $\displaystyle \text{x}=61=>\frac{61-60.3}{6.5}=\frac{0.7}{6.5}=.11; \text{  } \text{x}=63=>\frac{63-60.3}{6.5}=\frac{2.7}{6.5}=.42$ \newline \newline  
+    $\displaystyle p(61<\text{x}<63)=p(.11<z<.42)=.1628-.0438=.1190$  \newline \newline
+    + $\displaystyle \text{x}=60=>\frac{60-60.3}{6.5}=\frac{-.3}{6.5}=-.05; \text{ } \text{x}=65=>\frac{65-60.3}{6.5}=\frac{4.7}{6.5}=.72$ \newline \newline   
+    $\displaystyle p(60<\text{x}<65)=p(-.05<z<.72)=.0199+.2642=.2841$ \newline \newline
+
+* We may also use algebra to solve for raw scores given a particular probability using the following equation: $$\text{x}=z\sigma+\mu$$
+    + Suppose the county wants to aggressively enforce the speed limit against those drivers in the top 10 percent of speeding: \newline \newline
+        - $\displaystyle p(z>1.28)=.1003=>1.28=\frac{x-60.3}{6.5}=>x=68.62$ \newline \newline
+
+* Let's work through some more examples. 
+    + It is well know that the IQ in the population is normally distributed with mean $\mu = 100$ and standard deviation $\sigma=15$. Someone with an IQ greater than or equal to 140 is considered a genius or near genius. Moreover, someone with an IQ less than 20 is considered profoundly retarded. Someone in the normal range has an IQ of 85 to 115. What proportion of the population would be classifed as genius, profoundly retarded, and normal? \newline \newline
+        - $p(\text{x}>140)=p(\displaystyle z>\frac{140-100}{15})=p(z>2.67)=.0038$ \newline \newline
+        - $p(\text{x}<20)=p(\displaystyle z<\frac{20-100}{15})=p(z<-5.33)=.00001$ \newline \newline
+        - $p(90<\text{x}<110)=p(\displaystyle \frac{90-100}{15}<z<\frac{110-100}{15})=p(-.67<z<.67)=2\text{ * }.2486=.4972$ \newline \newline
+    + In order to graduate with honors, students must be in the top 2% (summa cum laude), 3% (magna cum laude), or 5% (cum laude) of their graduating class. Suppose that GPAs are normally distributed with mean $\mu=2.60$ and standard deviation $\sigma=.65$. What GPA must a student have to graduate with each of these three honors? \newline \newline
+        - $\displaystyle p(z>2.05)=.0202=>2.05=\frac{\text{x}-2.60}{.65}=>\text{x}=3.93$ \newline \newline
+        - $\displaystyle p(z>1.88)=.0301=>1.88=\frac{\text{x}-2.60}{.65}=>\text{x}=3.82$ \newline \newline
+        - $\displaystyle p(z>1.65)=.0495=>1.65=\frac{\text{x}-2.60}{.65}=>\text{x}=3.67$ \newline \newline
+        
+\newpage
+
+**Sampling Distribution**
+
+* The use of standard scores brings us closer to being able to conduct hypothesis tests using a sample mean ($\overline{x})$ as an estimate for the population mean ($\mu$). Our goal is to be able to use the sample mean as a "best guess" for the population mean. 
+
+* Recall that one of the properties of a statistic, such as a sample mean, is that although it is empirical (i.e., it can be measured) and known (we actually collect data from a sample), it is not fixed. This means that there is variation in the value of the mean from one sample to the next. Since we know this to be the case, we cannot simply use the quantities we obtain from our sample in place of the quantities we want to estimate for the population. Rather, we have to resort to what is called a sampling distribution. A sampling distribution is simply a particular type of probability distribution. 
+
+* Let's do a thought experiment. Let's say we draw a sample of size $\text{n}=100$ from the population. We know that the sample has mean $\overline{x}$ with standard deviation $s$, and that the population has mean $\mu$ with standard deviation $\sigma$. The problem is that we want to know $\mu$ but cannot determine this value exactly since it is not possible to gather data on every person in the population. So, we want to use our sample mean as an estimate of the population mean. Now, imagine drawing another sample of size $n=100$ from the same population and calculate a mean for each sample. Pretty soon, we find that we are beginning to have a distribution of sample means. We keep drawing an infinite number of samples and calculating a mean for every sample. The distribution of these sample means is called a sampling distribution. This sampling distribution is important because we know that the mean of the sampling distribution (i.e., the mean of the sample means) is $\mu$. The standard deviation of this distribution is called a *standard error* and is calculated as $\displaystyle \frac{\sigma}{\sqrt{\text{n}}}$. 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llcc}
+\hline
+Distribution  & Properties          & Mean                                        & Standard Deviation                                               \\ \hline
+Sample        & Empirical, known    & $\overline{\text{x}}$                       & $s$                                                              \\
+Population    & Empirical, unknown  & $\mu_{\text{x}}$                            & $\sigma_{\text{x}}$                                              \\
+Sampling      & Theoretical, known  & $\mu_{\overline{\text{x}}}=\mu_{\text{x}}$  & $\sigma_{\overline{\text{x}}}=\sigma_{\text{x}}/\sqrt{\text{n}}$ \\ \hline
+\end{tabular}
+\end{table}
+
+* So why is the sampling distribution important to us? The reason is that the sampling distribution provides a necessary link between our sample and the population that we are trying to know something about. We can imagine our sample mean as but one mean from a theoretical distribution of all possible sample means. 
+
+* With a sampling distribution, we can then use the laws of probability to determine the probability of obtaining our particular sample mean. One important property of a sampling distribution is that as the sample size increases, the standard error decreases, meaning that we have greater precision in estimating the true value of $\mu$ when $n$ gets larger and larger. In other words, the probability distribution gets tighter around the mean. 
+
+* Another property of a sampling distribution is that it is always normally distributed if the population characteristic is normally distributed. This means that we can take advantage of the properties of the normal distribution to determine probabilities. The obvious problem with this is that few variables are normally distributed in the population, and even fewer that are of interest to criminologists. But all is not lost.  
+
+\newpage
+
+**Central Limit Theorem**
+
+* Central limit theorem -- if an infinite number of samples of size $n$ are drawn from the population, *the sampling distribution will approach normality as the sample size becomes infinitely large, even if the characteristic is not normally distributed in the population*. This theorem is essential for criminologists, since it implies that even though a variable like "number of arrests" is highly skewed in the population, we can still assume that the sampling distribution of sample means will be normal when we have a large sample. This means that we can still employ the standard normal probability distribution to conduct hypothesis tests and estimate confidence intervals. 
+
+**Standard Score for a Sample Mean**
+
+* The sampling distribution is a probability (i.e., theoretical) distribution that forms a necessary link between the observed sample statistic and the unknown population parameter. In other words, it is essential for statistical inference. Even though we do not observe this distribution, we know its properties, specifically its mean and standard deviation. Moreover, the central limit theorem tells us that with large $n$, the sampling distribution is approximately normal, even though the characteristic is not normally distributed in the population. The advantage to normality is that we can resort to using the standard normal distribution to estimate probabilities. 
+
+* Suppose that we have a sample mean ($\overline{x}$) and we want to compare it to a population mean ($\mu$). Just like we cannot compute probabilities when we are dealing with raw scores, we cannot compute probabilities when we are dealing with sample means. We need to transform a mean and standard deviation from different samples into a common metric. We thus rely on the standard normal or z-distribution. Recall the z-score formula that we have seen so far:  $$z=\displaystyle \frac{x-\mu}{\sigma}$$   Notice that with this formula, we are standardizing a raw score with respect to a mean in standard deviation units from a population. We want to retain the same logic for the present problem, but instead use a sample-mean analog to this raw score formula. \newline \newline $$z=\displaystyle \frac{\overline{x}-\mu}{\sigma/\sqrt{n}}$$ 
+
+\newpage
+
+* Let's work through some examples. 
+    + We know that IQ is distributed normally in the population with mean ($\overline{x}$) 100 and standard deviation ($\sigma$) 15 (note that the fact that IQ is normally distributed in the population is unimportant here, since we know that sample means are normally distributed irrespective of how the characteristic is distributed in the population). Compute the following probabilities for a sample of 50 individuals. \newline \newline
+        - $p(\overline{\text{x}}>97)=p(\displaystyle z>\frac{97-100}{15/\sqrt{50}})=p(z>-1.41)=.5000+.4207=.9207$  \newline \newline
+        - $p(\overline{\text{x}}<95)=p(\displaystyle z<\frac{95-100}{15 / \sqrt{50}})=p(z<-2.36)=.5000-.4909=.0091$  \newline \newline
+        - $p(102<\overline{\text{x}}<106)=p(\displaystyle \frac{102-100}{15/\sqrt{50}}<z<\frac{106-100}{15/\sqrt{50}})=p(0.94<z<2.83)=.4977-.3264=.1713$  \newline \newline
+        
+    + Suppose that household income in the U.S. has mean $32,000 and standard deviation $5,000. Answer the following probability questions for a sample of 30 individuals. \newline \newline
+        - $p(\overline{\text{x}}<30000)=p(\displaystyle z<\frac{30000-32000}{5000 /\sqrt{30}})=p(z<-2.19)=.5000-.4857=.0143$ \newline \newline \newline
+        - $p(\overline{\text{x}}>33000)=p(\displaystyle z>\frac{33000-32000}{5000 /\sqrt{30}})=p(z>1.10)=.5000-.3643=.1357$  \newline \newline \newline
+        - $p(31500<\overline{\text{x}}<32500)=p(\displaystyle \frac{31500-32000}{5000/\sqrt{30}}<z<\frac{32500-32000}{5000/\sqrt{30}})$ \newline \newline
+        \hspace*{3.5cm} $=p(-0.55<z<0.55)=2 \text{ * }.2088=.4176$ \newline \newline
+    

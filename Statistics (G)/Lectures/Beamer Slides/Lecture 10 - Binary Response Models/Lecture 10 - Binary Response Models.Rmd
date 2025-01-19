@@ -1,0 +1,1260 @@
+---
+title: "Lecture 10 - Binary Response Models"
+author: "Samuel DeWitt"
+output:
+ beamer_presentation:
+    includes:
+      in_header: F:/My Drive/Prepped Courses/Statistics (G)/Lectures/Beamer Slides/Common Files/beamer-header.txt
+classoption: "aspectratio=169"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(foreign)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+library(car)
+library(lmtest)
+library(olsrr)
+library(sandwich)
+library(boot)
+library(knitr)
+library(reshape2)
+```
+
+## Outline
+
+I.  Statistical Properties of Binary Variables
+II.  The Linear Probability Model
+III.  Limitations of the Linear Probability Model
+IV. The Binary Response Model
+V.  Predicted Probabilities and Marginal Effects
+VI.  More on the Logit Model
+VII.  Other Distribution Functions
+
+## Statistical Properties of Binary Variables
+
+For a continuous random variable $Y_{ij}$, the formal notation for the expected value and variance are:
+
+$$E(Y_{i}) = \int^{+\inf}_{-\inf} Y_{i} f(Y_{i})dY_{i} = \mu$$
+
+$$V(Y_{i}) = E[Y_{i} - E(Y_{i})]^{2} = \sigma^{2}$$
+
+## Statistical Properties of Binary Variables
+
+Now assume that we have a discrete random variable $Y_{i}$, which is a **dummy variable**. This refers to a special kind of binary variable that meets the following condition: $$Y_{i} \in 0,1$$
+
+Another name for this kind of variable is a **Bernoulli random variable** - a variable with only two possible outcomes, with 1 classifying a *success* and 0 classifying a *failure*. 
+
+## Statistical Properties of Binary Variables
+
+With binary $Y_{i}$ we can write the expected value and variance in a slightly different way. Use $f(\cdot)$ to represent the probability density function (technically in this case, the probability mass function) for a Bernoulli random variable. We then have the following: 
+
+## Statistical Properties of Binary Variables
+
+\footnotesize
+
+\begin{align}
+E(Y_{i}) & = \sum[Y_{i} *f(Y_{i}] \\
+& = 0*Pf(Y_{i}=0)+1*Pr(Y_{i}=1) \\
+& = Pr(Y_{i} = 1) \\
+& = \pi
+\end{align}
+
+\begin{align}
+V(Y_{i}) & = \sum {[Y_{i} -E(Y_{i})]^{2}*f(Y_{i})} \\
+& = (0-\pi)^{2} * (1-\pi)+(1-\pi)^{2} * \pi \\
+& = (-\pi)(-\pi)(1-\pi)+(1-\pi)(1-\pi)\pi \\
+& = (\pi^{2})(1-\pi)+(\pi-\pi^{2})(1-\pi) \\
+& = (\pi-\pi^{2}+\pi^{2})(1-\pi) \\
+& = \pi * (1-\pi)
+\end{align}
+
+## Statistical Properties of Binary Variables
+
+We will use $\pi$ to denote $Pr(Y_{i}=1)$ which is nothing more than $\mu$ for a Bernoulli random variable. Note that $\pi$ in this sense does not refer to the constant which quantifies the ratio of a circle's circumference to its diameter, but refers to the first moment (arithmetic mean) of the distribution of $Y_{i}$. 
+
+## The Linear Probability Model
+
+Consider applying the ordinary least squares (OLS) estimator to a model in which the dependent variable is binary. This kind of model has a special name - the **linear probability model** (LPM). The population model we are interested in is, as usual:
+
+\begin{align}
+Y_{i} & = \beta_{0} + \beta_{1}X_{i1}+ \cdot \cdot \cdot + \beta_{k}X_{ik}+ \epsilon_{i} \\
+& = \beta_{0} + \sum^{k}_{j=1} \beta_{j} X_{ij} + \epsilon_{i}
+\end{align}
+
+for $i$=1,...,$n$ respondents and $j$=1,...,$k$ regressors.
+
+## The Linear Probability Model
+
+Or, for economy, it is also convenient to write: $$Y_{i} = X\beta_{i} + \epsilon_{i}$$
+
+where $X\beta_{i}$ is known as the **linear predictor**, or the sum of the intercept and all of the slope X regressor products (this requires a bit of matrix notation that I will not discuss here). Note that each slope represents the change in the $E(Y_{i}$ for a unit increase in each $X_{ij}$, holding all other regressors constant. 
+
+## The Linear Probability Model
+
+If we take the expectation for this linear equation, we obtain: 
+
+$$E(Y_{i} \mid X_{i1},...,X_{ik}) = \mu \mid X_{i1},...,X_{ik}$$
+
+$$V(Y_{i} \mid X_{i1},...,X_{ik}) = \sigma^{2}_{\epsilon}$$
+
+But recall from the previous section that, for binary $Y_{i}$:
+
+$$E(Y_{i}) = \pi$$
+
+$$V(Y_{i}) = \pi * (1-\pi)$$
+
+## The Linear Probability Model
+
+Now, if we take the conditional expectations of the LPM:
+
+\begin{align}
+E(Y_{i} \mid X_{i1},...,X_{ik}) & = Pr(Y_{i}=1 \mid X_{i1},...,X_{ik}) \\
+& = \pi \mid X_{i1},...,X_{ik} \\
+& = X\beta_{i}
+\end{align}
+
+\begin{align}
+V(Y_{i} \mid X_{i1},...,X_{ik}) & = Pr(Y_{i}=1 \mid X_{i1},...,X_{ik}) * [1-Pr(Y_{i}=1 \mid X_{i1},...,X_{ik})] \\
+& = \pi \mid X_{i1},...,X_{ik} * (1-\pi \mid X_{i1},...,X_{ik}) \\
+& = X\beta_{i} * (1-X\beta_{i})
+\end{align}
+
+## The Linear Probability Model
+
+Each slope still represents the change in $E(Y_{i})$ for a unit increase in $X_{ij}$, holding all other regressors constant. 
+
+However, because $Y_{i}$ is binary, each slope now takes on a special meaning - $\beta_{j}$ is the mean difference in $Pr(Y_{i}=1)$ between subjects who differ by one unit in $X_{ij}$, holding all other regressors constant. 
+
+The linear predictor $X\beta_{i}$ represents the predicted $Pr(Y_{i}=1)$ for a given set of values of the regressors $X_{i1},...,X_{ij}$. 
+
+## The Linear Probability Model
+
+To provide an example of the linear probability model, we will use data from a study by Apel & Burrow (2011). The data are from the National Longitudinal Survey of Youth 1997. In this study, they examined what impact youth victimization had on the likelihood of *violent self help*. 
+
+## The Linear Probability Model
+
+The key variables we will use for this example are: 
+
+\footnotesize
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\hline
+Variable Name & Definition \\ \hline
+selfhelp & =1 if youth was in a gang, carried a handgun, or assaulted someone \\
+bully & =1 if youth was repeatedly bullied \\
+male & =1 if youth is male \\
+nonwhite & =1 if youth is African American or Latino \\
+grades & middle school grades (1=mostly below Ds; 8=mostly As) \\
+drugs & variety score of substance use (cigarettes, alcohol, or marijuana) \\
+crime & variety score of crime (vandalism, minor theft, major theft, fencing, drug selling) \\ \hline
+\end{tabular}
+\end{table}
+
+## The Linear Probability Model
+
+The dependent variable, *selfhelp*, is measured at the 1998 interview, and references behavior which occurred since the 1997 interview. All of the regressors are measured at the 1997 interview. Let's have a look at the descriptive statistics for each variable: 
+
+```{r, echo=F}
+self_help<-read.dta('00_selfhelp.dta')
+```
+
+\footnotesize
+
+```{r, echo=F, warning=FALSE}
+df <- as_tibble(self_help)
+
+df.sum <- df %>%
+  select(selfhelp, bully, male, nonwhite, grades, drugs, crime) %>% # select variables to summarize
+  summarize_each(funs(min = min, 
+                      median = median, 
+                      max = max,
+                      mean = mean, 
+                      sd = sd))
+
+# reshape it using tidyr functions
+
+df.stats.tidy <- df.sum %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  select(var, median, max, mean, sd) # reorder columns
+
+print(df.stats.tidy)
+```
+
+## The Linear Probability Model
+
+As a starting point, we shall estimate an intercept-only model: 
+
+$$\text{SelfHelp}_{i} = \beta_{0} + \epsilon_{i}$$
+
+## The Linear Probability Model
+
+\tiny
+
+```{r, echo=T}
+summary(lm(selfhelp~1, data=self_help))
+```
+
+## The Linear Probability Model
+
+Notice that the estimate of the intercept is nothing more than the sample mean of *selfhelp*, and the residual standard error is its standard deviation. 
+
+Recall that this is not a coincidence. Absent any additional information, the *best guess* for any random variable is the sample mean. 
+
+## The Linear Probability Model
+
+Next, the model we will estimate is the following bivariate regression:
+
+$$\text{SelfHelp}_{i} = \beta_{0} + \beta_{1} \text{Bully}_{i} + \epsilon_{i}$$
+
+## The Linear Probability Model
+
+\tiny
+
+```{r, echo=FALSE}
+summary(lm(selfhelp~bully, data=self_help))
+```
+
+## The Linear Probability Model
+
+Because *bully* and *selfhelp* are both binary, the coefficient represents a contrast in the mean probability of *selfhelp* between youth who are bullied and youth who are not bullied. 
+
+So, youth who are bullied have a probability of selfhelp that is 12.8 points higher, and significantly so (p<.001). 
+
+Furthermore, the intercept in this model represents the mean self-help probability for youth who are not bullied. 
+
+This means that the probability of self-help among non-bullied youth is 0.147, while the probability of self-help among bullied youth us significantly higher at 0.275 (0.147 + 0.128). 
+
+## The Linear Probability Model
+
+Let's incorporate some additional regressors as control variables. The population model to be estimated is now: 
+
+$$\text{SelfHelp}_{i} = \beta_{0} + \beta_{1} \text{Bully}_{i} + \beta_{2} \text{Nonwhite}_{i} + \beta_{3} \text{Grades}_{i} + \beta_{5} \text{Drugs}_{i} + \beta_{6} \text{Crime}_{i} + \epsilon_{i}$$
+
+## The Linear Probability Model
+
+\tiny
+
+```{r, echo=FALSE}
+lm1<-lm(selfhelp~bully+male+nonwhite+grades+drugs+crime, data=self_help)
+summary(lm1)
+```
+
+## The Linear Probability Model
+
+The coefficient of interest is still the one for bully. It indicates that youth who are bullied are significantly more likely to use self-help later, controlling for other things that are likely to be correlated with both bullying and self-help. 
+
+Specifically, compared to youth who are not bullied, they have a probability of self-help which is 7.4 points higher, all else equal. Note that other important correlates of self-help are *grades*, *drugs*, and *crime*. 
+
+## Limitations of the Linear Probability Model
+
+The OLS estimator has a number of properties that can make it less optimal than alternatives when the dependent variable is binary. 
+
+Here we will consider four potential problems: (1) heteroscedasticity; (2) nonsensical predictions; (3) non-normality; and (4) non-linearity. 
+
+Each problem will be examine in more detail below, as they concern the following model:
+
+\footnotesize
+
+$$\text{SelfHelp}_{i} = \beta_{0} + \beta_{1} \text{Bully}_{i} + \beta_{2} \text{Nonwhite}_{i} + \beta_{3} \text{Grades}_{i} + \beta_{5} \text{Drugs}_{i} + \beta_{6} \text{Crime}_{i} + \epsilon_{i}$$
+
+## Heteroscedastic Errors
+
+Since we showed that the conditional variance of $Y_{i}$ depends on the value(s) of the regressor(s), the LPM by definition has heteroscedastic errors. To see this, recall the formula for the conditional variance: 
+
+$$V(Y_{i} \mid X_{i1},...,X_{ik}) = X\beta_{i} \cdot (1-X\beta_{i})$$
+
+Recall that heteroscedasticity means that the OLS estimator is inefficient. In other words, although the coefficients are still unbiased, the standard errors are biased. This can produce misleading tests of statistical significance. Let's observe this by plotting the model residuals against each of the regressors. 
+
+## Heteroscedastic Errors
+
+```{r, echo=FALSE, message=FALSE, fig.fullwidth=TRUE}
+bully_resid<-ggplot(self_help, aes(x=bully, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+
+male_resid<-ggplot(self_help, aes(x=male, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+
+nonwhite_resid<-ggplot(self_help, aes(x=nonwhite, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+
+grades_resid<-ggplot(self_help, aes(x=grades, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+
+drugs_resid<-ggplot(self_help, aes(x=drugs, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+
+crime_resid<-ggplot(self_help, aes(x=crime, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+```
+
+```{r, fig.align='center', echo=FALSE, fig.height=2.65, fig.width=5}
+ggarrange(bully_resid, male_resid,
+          ncol=2, nrow=1)
+```
+
+## Heteroscedastic Errors
+
+```{r, fig.align='center', echo=FALSE, fig.height=2.65, fig.width=5}
+ggarrange(nonwhite_resid, grades_resid,
+          ncol=2, nrow=1)
+```
+
+## Heteroscedastic Errors
+
+```{r, fig.align='center', echo=FALSE, fig.height=2.65, fig.width=5}
+ggarrange(drugs_resid, crime_resid,
+          ncol=2, nrow=1)
+```
+
+## Heteroscedastic Errors
+
+We can also plot the residuals, $Y_{i} - \hat{Y}_{i}$, against the fitted values, $\hat{Y}_{i}$:
+
+```{r, echo=FALSE, message=FALSE, fig.align='center', fig.height=2.3, fig.width=5}
+ggplot(,aes(x=lm1$fitted.values, y=lm1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept=0, color='red')
+```
+
+## Heteroscedastic Errors
+
+As if the visual evidence was not enough, a Breusch-Pagan test provides confirmation of heteroscedastic residuals:
+
+\tiny
+
+```{r, echo=FALSE}
+bptest(lm1)
+ols_test_score(lm1)
+```
+
+## Heteroscedastic Errors
+
+Notice that, in each plot, the heteroscedasticity is of a peculiar form - it is not in a classic fan shape as we may expect in applications with a continuous dependent variable. 
+
+The residuals appear to move in an echelon pattern. There appear to be two parallel lines - the top line represents those individuals who have a value of 1 on *selfhelp*, while the bottom line represents those individuals who have a value of 0. 
+
+This pattern makes perfect sense when you inspect the x-axis. Someone with a value of 1 on *selfhelp* who has a predicted probability close to 1.0 must have a much smaller residual than a counterpart who has a predicted probability close to 0.0. 
+
+## Heteroscedastic Errors
+
+Despite the heteroscedasticity, a couple of solutions do exist. One early solution proposed by Goldberger (1964) was to estimate the LPM in three steps.
+
+## Heteroscedastic Errors
+
+First, we need to estimate the LPM as we did above. 
+
+Second, we need to take the fitted values from this model, and compute a person-specific **weight** in the following manner: $$W_{i} = \hat{Y}_{i} \cdot (1-\hat{Y}_{i})$$ 
+
+Third, we need to re-estimate the LMP again, but weighting the regression by the inverse of $W_{i}$ - a procedure that is known as **weighted least squares** (WLS): 
+
+$$\frac{Y_{i}}{\sqrt{W_{i}}} = \beta^{'}_{0} \frac{1}{\sqrt{W_{i}}}+ \cdot \cdot \cdot + \beta^{'}_{k} \frac{X_{ik}}{\sqrt{W_{i}}}+\epsilon_{i} \frac{1}{\sqrt{W_{i}}}$$
+
+## Heteroscedastic Errors
+
+Before computing the individual weights and re-estimating the model, however, we need to make sure that all fitted values are greater than 0.0 and less than 1.0 (i.e., recode out-of-range values), or else we will end up dividing by zero and getting an error message. To perform WLS on the LPM in R, we can specify Goldberger's weight using the **weights** option in the lm() function. 
+
+```{r, echo=TRUE}
+yhat<-lm1$fitted.values
+yhat[yhat<=.001]<-.001
+yhat[yhat>=.999]<-.999
+gb_weight<-yhat*(1-yhat)
+```
+
+## Heteroscedastic Errors
+
+\tiny
+ 
+```{r, echo=FALSE}
+summary(lm(selfhelp~bully+male+nonwhite+grades+drugs+crime,
+           data=self_help, weights=1/gb_weight))
+```
+
+## Heteroscedastic Errors
+
+An alternative, and simpler, approach is to obtain robust (i.e., heteroscedasticity-consistent) standard errors, which have the appeal of adjusting for heteroscedasticity of arbitrary form:
+
+\tiny
+
+```{r, echo=FALSE}
+coeftest(lm1, vcov=vcovHC, type="HC1")
+```
+
+## Heteroscedastic Errors
+
+Let's compare results from the three models:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lccc}
+\hline
+& LPM w/ & Goldberger LPM & LPM w/Robust \\
+Regressor & No Correction & WLS Model & Standard Errors \\ \hline
+Bullied & .074(.024)** & .077(.026)** & .074(.027)** \\
+Male & .024(.019) & .032(.017) & .024(.019) \\
+Non-White & -.008(.020) & .003(.016) & -.008(.020) \\
+Grades & -.032(.008)*** & -.029(.007)*** & -.032(.008)*** \\
+Drugs & .054(.013)*** & .057(.015)*** & .054(.016)*** \\
+Crime & .063(.012)*** & .065(.014)*** & .063(.015)*** \\
+Constant & .273(.055)*** & .242(.051)*** & .273(.060)*** \\ \hline
+\multicolumn{4}{l}{*p<.05; **p<.01; ***p<.001}
+\end{tabular}
+\end{table}
+
+## Heteroscedastic Errors
+
+Notice that the tendency is for the standard errors to et a little bit larger when some form of heteroscedasticity adjustment is made, while the coefficients are largely unchanged. 
+
+Most importantly, the pattern of statistical significance is little affected. In the scheme of things, the mechanical heteroscedasticity of the LPM is the least worrisome shortcoming. Instead, the three remaining limitations pose a bigger problem for the LPM. 
+
+## Out-of-Range Predictions
+
+The LPM can produce fitted values that are negative or greater than one. In the previous example, we know that all of the fitted values were in the 0-1 interval, because none of them were out of range when we performed Goldberger's WLS (not shown during creation of this variable). 
+
+## Out-of-Range Predictions
+
+Let's add some additional regressors to the model to get a fuller specification: 
+ 
+\footnotesize
+ 
+\begin{table}[ht]
+\centering
+\begin{tabular}{ll}
+\hline
+Variable Name & Definition \\ \hline
+age97 & age in years at the 1997 interview \\
+hhsize97 & number of household residents \\
+bbio97 & =1 if youth lives with both biological parents \\
+ccity97 & =1 if youth lives in the central city of an MSA \\
+house97 & =1 if youth lives in a stable dwelling (e.g., house, condo, farm, ranch) \\
+piat97 & achievement score on the mathematics section of the P.I.A.T. \\
+thomewk & number of hours per week spent on homework \\
+schpos & index of positive school attitudes (e.g., "teachers are good") \\
+schprob & variety score of school problem behavior (tardiness, absences, suspensions) \\ \hline
+\end{tabular}
+\end{table}
+
+## Out-of-Range Predictions
+
+\footnotesize
+```{r, echo=F, warning=FALSE}
+df <- as_tibble(self_help)
+
+df.sum <- df %>%
+  select(age97, hhsize97, bbio97, ccity97, house97, piat97, thomewk, schpos, schprob) %>% # select variables to summarize
+  summarise_each(funs(min = min, 
+                      median = median, 
+                      max = max,
+                      mean = mean, 
+                      sd = sd))
+
+# reshape it using tidyr functions
+
+df.stats.tidy <- df.sum %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  select(var, median, max, mean, sd) # reorder columns
+
+print(df.stats.tidy)
+```
+
+## Out-of-Range Predictions
+
+\tiny
+
+```{r, echo=F}
+lm2<-lm(selfhelp~bully+male+nonwhite+grades+drugs+crime+age97+hhsize97+
+          bbio97+ccity97+house97+piat97+thomewk+schpos+schprob,
+        data=self_help)
+```
+
+```{r, echo=TRUE}
+coeftest(lm2, vcov=vcovHC, type="HC1")
+```
+
+## Out-of-Range Predictions
+
+We can then summarize and plot the fitted values from this model to check for any out of range predicted values: 
+
+```{r, echo=T, message=FALSE}
+summary(lm2$fitted.values)
+```
+
+## Out-of-Range Predictions
+
+\footnotesize
+
+```{r, fig.align='center', fig.height=2.2, fig.width=5, message=FALSE}
+ggplot(,aes(x=lm2$fitted.values)) +
+  geom_histogram()
+```
+
+## Out-of-Range Predictions
+
+As you can see, we appear to have several observations with a predicted probability of self-help which is below 0. We can flag these cases with a dummy variable just to see how many there are: 
+
+```{r, echo=TRUE}
+outrange<-ifelse(lm2$fitted.values<0,1,0)
+table(outrange)
+```
+
+## Out-of-Range Predictions
+
+So 38 cases (or 2.5% of the sample) have predicted probabilities that are outside the 0-1 interval. Note that out-of-range predicted probabilities are more common when there are many regressors in the model that are not statistically significant. 
+
+One solution would therefore be to trim the non-significant regressors from the model, although this would be a questionable solution if there are theoretical reasons for retaining the non-significant regressors. 
+
+A second solution would be to truncate the $\hat{Y}<0$ at 0.0 and $\hat{Y}>1$ at 1.0, but this also seems like an arbitrary solution to out-of-range predictions. Just because there are nonsensical predictions does not mean that the LPM is biased. Nevertheless, if one is most interested in obtaining predicted probabilities, the LPM might not be the preferred model. 
+
+## Residual Non-Normality
+
+Since $Y_{i}$ can only take on two values (0,1), the residual similarly can only take on two values. Let's start with what we already know about the residual: 
+
+\begin{align}
+\epsilon_{i} & = Y_{i} - \hat{Y}_{i} \\
+& = Y_{i} - \beta_{0} - \beta_{1}X_{i1}- \cdot \cdot \cdot - \beta_{k}X_{ik} \\
+& Y_{i} - X\beta_{i} 
+\end{align}
+
+where $X\beta_{i}$ is taken to be the linear predictor for a specific subject in the sample. In an LPM, it is necessarily the case that: 
+
+\begin{equation}
+\epsilon_{i} = 
+\begin{cases}
+-X\beta_{i} \text{   } \text{ if  } Y_{i} = 0 \\
+1-X \beta_{i} \text{   } \text{ if  } Y_{i} =1 \\
+\end{cases}
+\end{equation}
+
+## Residual Non-Normality
+
+Consequently, the residuals cannot (and will never) be normally distributed). Let's see this empirically:
+
+## Residual Non-Normality
+
+```{r, echo=F, message=F, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(, aes(x=lm2$residuals)) +
+  geom_histogram(aes(y=..density..),
+                 color=1, fill='white') + 
+  geom_density(color="red")
+```
+
+## Residual Non-Normality
+
+We can confirm the non-normality of the residuals with some diagnostics, although the non-normality is so obvious that diagnostics are practically unnecessary. Let's have a look at a kernel density plot, a standardized normal probability plot, and a Shapiro-Wilk test:
+
+## Residual Non-Normality
+
+```{r kdens_error, echo=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(data=data.frame(residuals<-lm2$residuals),aes(x=residuals)) + 
+  geom_density() + 
+  stat_function(fun=dnorm, color='red', linetype='dashed',
+                args=list(mean=mean(residuals),
+                          sd=sd(residuals)))
+```
+
+## Residual Non-Normality
+
+```{r stan_norm_error, echo=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggqqplot(lm2$residuals)
+```
+
+## Residual Non-Normality
+
+```{r shapwilk_error, echo=FALSE}
+shapiro.test(lm2$residuals)
+```
+
+## Residual Non-Normality
+
+Recall that residual non-normality does not introduce bias into the LPM, it only affects our ability to conduct hypothesis tests. 
+
+Our tests assume that the residuals are approximately normal to a degree that we can appeal to known probability distributions (i.e., the t- or z-distribution) in order to provide credible p-values for our statistical tests. 
+
+## Inherent Non-Linearity
+
+Perhaps the most serious shortcoming of the LPM is the inherent non-linearity of models with binary dependent variables. 
+
+The LPM requires that the effect of $X_{i}$ on $Y_{i}$ be constant over the range of $X_{i}$. 
+
+When the outcome is a probability, however, it is reasonable to expect $X_{i} to have some diminishing influence as $Pr(Y_{i}=1)$ approaches 0 or 1. This is simply because there is less room for large changes in $Pr(Y_{i}=1)$ at the endpoints. 
+
+## Inherent Non-Linearity
+
+This is a very important limitation of the LPM model which can be illustrated by inputting some hypothetical data: 
+
+```{r new_data, echo=TRUE}
+Y<-c(0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1)
+X<-c(0,1,2,3,4,5,6,7,8,12,13,14,15,16,17,18,19,20)
+```
+
+## Inherent Non-Linearity
+
+Let's look at a basic scatterplot of these data, and fit a regression line to them:
+
+## Inherent Non-Linearity
+
+```{r, echo=FALSE, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(,aes(x=X, y=Y)) +
+  geom_point() +
+  geom_smooth(method='lm', color='red', linetype='dashed',
+              se=F)
+```
+
+## Inherent Non-Linearity
+
+Notice first that we have the problem of nonsensical prediction here, because really low data points ($X_{i}$ = 0,1,2) and really high data points ($X_{i}$ = 18,19,20) have fitted values that are below 0.0 and above 1.0, respectively. 
+
+We can tell this because the regression line (the dashed red line) dips below 0.0 on the left side of the scatterplot and peaks above 1.0 on the right side. 
+
+## Inherent Non-Linearity
+
+Secondarily, though, wouldn't it be nice if we could make this line bend at the endpoints so that we could provide a better fit to the data points and simultaneously keep the fitted values within the 0-1 interval? 
+
+It will be necessary to write some additional code to illustrate how we can do this, but it effectively represents a logistic (or log-odds) transformation of $Y_{i}$: 
+
+```{r logodds_Y, echo=TRUE}
+newY<-Y
+newY[newY<.01]<-.01
+newY[newY>.99]<-.99
+logitY<-log(newY/(1-newY))
+lm3<-lm(logitY~X)
+probY<-exp(lm3$fitted.values)/(1+exp(lm3$fitted.values))
+```
+
+## Inherent Non-Linearity
+
+```{r, echo=FALSE, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(,aes(x=X,y=Y)) +
+  geom_point() +
+  geom_smooth(method='lm', color='red',
+              linetype='dashed', se=F) +
+  geom_line(aes(x=X, y=probY),
+            color='blue')
+```
+
+## Inherent Non-Linearity
+
+Almost all of the data points fall on the curved line as opposed to the straight line. 
+
+Additionally, the curved line does not fall below 0.0 or above 1.0, eliminating out-of-range predictions. 
+
+This line is what we call an S-curve (technically, the curved line is known as a **sigmoid**). 
+
+To get the line to bend in this manner, we had to perform a transformation which allowed $Y_{i}$ to be non-linear in $X_{i}$. So we had to forgo the simplicity and ease of interpretation of the LPM in order to achieve a better fit to the data points. 
+
+## Inherent Non-Linearity
+
+As the straight line in the figure above indicates, the LPM assumes that $X_{i}$ has a *constant absolute effect* on $Pr(Y_{i}=1)$. In other words, a one-unit increase in $X_{i}$ produces an increase in $Pr(Y_{i}=1)$ that is uniform, regardless of where on the $X_{i}$ continuum the increase occurs. 
+
+On the other hand, the line representing the S-curve assumes that $X_{i}$ has a *constant proportional effect* on $Pr(Y_{i}=1)$. It is still a linear model, but we have taken a non-linear transformation of the dependent variable. 
+
+This allows the absolute increase in $Pr(Y_{i}=1)$ for a one-unit increase in $X_{i}$ to differ depending on where the increase occurs. As shown in the figure, the increase in $Pr(Y_{i}=1)$ is smallest at the endpoints of the $X_{i}$ continuum, and is largest in the middle of the distribution of $X_{i}$. 
+
+## Inherent Non-Linearity
+
+With binary outcomes, then, there tends to be inherent non-linearity that the LPM cannot easily accommodate. This is the single shortcoming that best justifies the adoption of a non-linear probability model. 
+
+That being said, the LPM should not necessarily be abandoned in every application with a binary dependent variable. Its shortcomings can be overcome by making adjustments such as those considered in the preceding sections (e.g., robust standard errors). 
+
+The tradeoff is the ease of interpretation of the coefficients in the LPM compared to the models evaluated in the next section. As a general rule. the LMP (with proper adjustments) is a perfectly fine model when the mean of $Y_{i}$ lies between about 0.25 and 0.75:
+
+## Inherent Non-Linearity
+
+```{r, echo=FALSE, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(,aes(x=X,y=Y)) +
+  geom_point() +
+    geom_line(aes(x=X, y=probY),
+            color='blue') +
+  geom_hline(yintercept=0.25, linetype='dashed',
+             color='red') +
+  geom_hline(yintercept=0.75, linetype='dashed',
+             color='red')
+```
+
+## Inherent Non-Linearity
+
+You can see in the figure above that the S-curve is roughly linear between these two probabilities. When the mean of $Y_{i}$ lies outside the 0.25 - 0.75 interval, on the other hand, it might be worthwhile to consider some of the models explained in the remainder of this document.
+
+## Logic of the Binary Response Model
+
+To understand the logic of binary response models, suppose that there exists an underlying response variable $Y^{*}_{i}$ that generates the observed (and binary) $Y_{i}$. 
+
+Think of this underlying variable as some kind of **latent propensity** for experiencing the outcome event. 
+
+This $Y^{*}_{i}$ is continuous but unobserved, with a vertical line at some threshold which is often assumed to be 0. 
+
+## Logic of the Binary Response Model
+
+What we observe instead is a dummy variable, $Y_{i}$, such that:
+
+\begin{equation}
+Y_{i} = 
+\begin{cases}
+0 \text{   if } Y^{*}_{i} <0 \\
+1 \text{   if } Y^{*}_{i} >0
+\end{cases}
+\end{equation}
+
+## Logic of the Binary Response Model
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+label1<-expression("Y"[i]*"=0")
+label2<-expression("Y"[i]*"=1")
+label3<-expression("Y"[i]^"*")
+set.seed(1242021)
+data<-data.frame(norm<-rnorm(100000, mean=0, sd=1))
+ggplot(data,aes(x=norm)) +
+  stat_function(fun=dnorm, color='blue', linetype='solid',
+                args=list(mean=mean(norm),
+                          sd=sd(norm))) +
+  geom_vline(xintercept=0, color='red', linetype='dashed') +
+  annotate("text", x=-1, y=.05, parse=F,
+           label=label1) +
+  annotate("text", x=1, y=.05, parse=F,
+           label=label2) +
+  annotate("text", x=2.5, y=.3, parse=F,
+           label=label3) +
+  geom_hline(yintercept=0, color='black') +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank())
+```
+
+## Logic of the Binary Response Model
+
+The vertical line represents the threshold on the latent response variable beyond which an observation is *assigned* a value of 1 on the observed response variable. (NOTE: In principle, any value $\tau$ may be chosen for this threshold. It can be shown that the only consequence of selecting $\tau \ne 0$ is a rescaling of the intercept in the binary response model.) 
+
+Notice that the distribution can be shifted to the left or the right depending on the relative number of 0s and 1s in the data. 
+
+For example, with proportionately more 0s than 1s in the sample, the distribution will be shifted to the left so that there are more negative values underneath the curve. 
+
+## Logic of the Binary Response Model
+
+Regressor variables are incorporated into the latent variable model in the following manner:
+
+\begin{align}
+Y_{i}^{*} & = \beta_{0} + \beta_{1}X_{i1} + \cdot \cdot \cdot + \beta_{k}X_{ik} + \epsilon_{i} \\
+& = \beta_{0} + \sum^{k}_{j=1} \beta_{j}X_{ij}+\epsilon_{i} \\
+& = X\beta_{i} + \epsilon_{i} 
+\end{align}
+
+## Logic of the Binary Response Model
+
+To economize the notation, $X\beta_{i}$ will be used to denote the linear predictor for each observation. Notice that this model is actually *linear in the latent variable* whereas it will be non-linear in the observed variable, as we will soon see. The relationship between $Y_{i}$ and $Y^{*}_{i}$ can actually be illustrated in the following way - let's begin with the obvious, the unconditional expectation: 
+
+\begin{align}
+E(Y_{i}) & = Pr(Y_{i}=1) \\
+& = Pr(Y^{*}_{i}) 
+\end{align}
+
+## Logic of the Binary Response Model
+
+With the inclusion of regressors, the conditional expectation becomes:
+
+\begin{align}
+Pr(Y^{*}_{i} \mid X_{i1},...,X_{ik} >0) & = Pr(X\beta_{i} + \epsilon_{i} >0) \\
+& = Pr (\epsilon_{i} -X\beta_{i}) 
+\end{align}
+
+## Logic of the Binary Response Model
+
+Since $Y^{*}_{i}$ is symmetrical, we can rewrite this:
+
+
+$$Pr(\epsilon_{i} > -X\beta_{i}) = Pr(\epsilon_{i}<X\beta_{i})$$
+
+The inequality on the right hand side is the notation for a cumulative distribution function (c.d.f.) of the residual, evaluated at $X\beta_{i}$. 
+
+In other words, the c.d.f. of the residual is the entire area under a continuous curve from $-\inf$ to $X\beta_{i}$. This is in contrast to the probability density function (p.d.f.), which is the height of a curve evaluated at $X\beta_{i}$. 
+
+## Logic of the Binary Response Model
+
+So the formal notation for the binary response model, with appropriate conditioning on the regressors, is:
+
+\begin{align}
+Pr(Y_{i}=1 \mid X_{i1},...,X_{ik}) & = Pr(\epsilon_{i} <X\beta_{i}) \\
+& = F(X\beta_{i})
+\end{align}
+
+where $F(\cdot)$ is the notation for a c.d.f. 
+
+## Logic of the Binary Response Model
+
+Now, there are two useful c.d.f.'s that we may choose - the standard normal distribution function and the logistic distribution function. 
+
+The standard normal c.d.f. is represented by $\Phi(\cdot)$, and the logistic c.d.f. is represented by $\Lambda(\cdot)$. 
+
+The former gives rise to the probit model, and the latter gives rise to the logit model. 
+
+## Logic of the Binary Response Model
+
+The two c.d.f's can be formalized as follows:
+
+$$\text{Probit} \colon (Y_{i} = 1 \mid X_{i1},...,X_{ik}) = \frac{1}{\sqrt{2\pi}} \int^{X\beta_{i}}_{-\inf} exp(-\frac{1}{2} \epsilon_{i})d\epsilon_{i}$$
+
+\begin{align}
+\text{Logit} \colon \Lambda(X\beta_{i}) & = \frac{exp(X\beta_{i})}{1+exp(X\beta_{i})} \\
+& = \frac{1}{1+exp(-X\beta_{i})}
+\end{align}
+
+## Logic of the Binary Response Model
+
+The c.d.f.'s for the probit and logit models look something like this:
+
+```{r, echo=FALSE, out.width="75%", out.height="75%", fig.align='center'}
+include_graphics("logit_probit_comp.png")
+```
+
+## Logic of the Binary Response Model
+
+Although they are less important for our purposes, the corresponding p.d.f.'s are parameterized and shaped as follows:
+
+$$\text{Probit} \colon \Phi(X\beta_{i}) = \frac{1}{\sqrt{2\pi}}exp \left( -\frac{1}{2}\epsilon_{i} \right)$$
+
+$$\text{Logit} \colon \Lambda(X\beta_{i}) = \frac{exp(-X\beta_{i})}{[1+exp(-X\beta_{i})]^{2}}$$
+
+## Logic of the Binary Response Model
+
+```{r, echo=FALSE, out.width="75%", out.height="75%", fig.align='center'}
+include_graphics("logit_probit_pdf.png")
+```
+
+## Logic of the Binary Response Model
+
+Notice that the two distributions are very similar, with the exception that the logistic distribution has somewhat thicker tails, while the density does not peak as high. In practice, the distributions yield essentially the same predicted probabilities, and in fact the point estimates will tend to differ by only a scale factor. In fact, it can be shown:
+
+$$1.60 * \beta_{Probit} \le \beta_{Logit} \le 1.81 * \beta_{Probit}$$
+
+$$0.56 * \beta_{Logit} \le \beta_{Probit} \le 0.62 * \beta_{Logit}$$
+
+## An Empirical Illustration
+
+To see how the binary response model works, let's begin with an empirical illustration in which the response variable is the self-help indicator utilized in earlier examples, *selfhelp*. The frequency distribution for this response variable is: 
+
+```{r,}
+table(self_help$selfhelp)
+```
+
+## An Empirical Illustration
+
+To acquire some intuition about what the coefficients from a binary response model mean, let's first estimate an intercept-only probit model:
+
+## An Empirical Illustration
+
+\tiny
+
+```{r,}
+summary(glm(selfhelp~1, data=self_help, family=binomial(link='probit')))
+```
+
+## An Empirical Illustration
+
+Notice that the intercept represents a z-score, which means that we can evaluate the standard normal c.d.f. at the intercept in order to obtain a probability. Let's see what the probability yields:
+
+$$\Phi(-0.939)=`r round(pnorm(-.939),3)`$$
+
+## An Empirical Illustration
+
+Notice that this is nothing more that the sample mean of *selfhelp*, or the proportion of the sample that reports involvement in self-help behavior. I simply used the pnorm() function (where 0.939 = q) above to produce the cumulative probability at part of the normal curve. 
+
+## An Empirical Illustration
+
+Now let's estimate the intercept-only logit model:
+
+## An Empirical Illustration
+
+\tiny
+
+```{r,}
+summary(glm(selfhelp~1, data=self_help, family=binomial(link='logit')))
+```
+
+## An Empirical Illustration
+
+We can evaluate the cumulative logistic distribution at the intercept in order to obtain the mean self-help probability for the sample. This can be performed by plugging the intercept into the formula:
+
+$$\Lambda(-1.558) = \frac{exp(-1.558)}{1+exp(-1.558)} = `r round(exp(-1.558)/(1+exp(-1.558)),3)`$$
+
+## An Empirical Illustration
+
+In R, we can use the invlogit() function from the *boot* package to compute this value directly:
+
+```{r,}
+inv.logit(-1.558)
+```
+
+## An Empirical Illustration
+
+Notice that if we compute the ratio of the probit and logit coefficients, we obtain: 
+
+$$\frac{\hat{\beta}_{Probit}}{\hat{\beta}_{Logit}}= \frac{-0.939}{-1.558} = 0.603$$
+
+$$\frac{\hat{\beta}_{Logit}}{\hat{\beta}_{Probit}}=\frac{-1.558}{-0.939} = 1.659$$
+
+Thus, the probit coefficient lies within the 0.56 to 0.62 interval relative to the logit coefficient, whereas the logit coefficient lies within the 1.60 to 1.81 interval relative to the probit coefficient. 
+
+## An Empirical Illustration
+
+We can visualize this probability on both the standard normal c.d.f. and the logistic c.d.f.:
+
+```{r, echo=FALSE, out.width="75%", out.height="75%", fig.align='center'}
+include_graphics("logit_probit_cdf.png")
+```
+
+## An Empirical Illustration
+
+The horizontal line identifies the response probability of 0.174, which we have already obtained by evaluating the standard normal c.d.f. at -0.939 and the logistic c.d.f. at -1.558, both of which are shown as vertical lines in the figure. 
+
+Note that, when we include a regressor, we are asking how $Pr(Y_{i}=1)$ response to an incremental increase in $X_{i}$. 
+
+If the slope corresponding to $X_{i}$ is positive, the vertical line will be shifted to the right and will thus increase the predicted $Pr(Y_{i}=1)$. 
+
+On the other hand, if the slope corresponding to $X_{i}$ is negative, the vertical line will be shifted to the left and will thus decrease the predicted $Pr(Y_{i})$. 
+
+## An Empirical Illustration
+
+Let's now consider adding a single regressor to the model. We will again examine *bully*, the dummy variable for having been the victim of repeated bullying. But first, let's get a cross-tabulation of *selfhelp* by *bully*:
+
+## An Empirical Illustration
+
+```{r,}
+with(self_help, table(selfhelp, bully))
+```
+
+## An Empirical Illustration
+
+This indicates that the likelihood of self-help among bullied youth is 27.5% ($\frac{87}{229}$) compared to 14.7% ($\frac{178}{1030}$) among non-bullied youth. 
+
+The probit and logit models should be capable of perfectly replicating these probabilities. The formal equations for the models we are about to estimate is as follows:
+
+$$\Phi^{-1}[Pr(\text{SelfHelp}_{i}=1)] = \beta_{0} + \beta_{1}\text{Bully}_{i}+\epsilon_{i}$$
+
+$$\Lambda^{-1}[Pr(\text{SelfHelp}_{i}=1)] = \beta_{0} + \beta_{1}\text{Bully}_{i}+\epsilon_{i}$$
+
+## An Empirical Illustration
+
+\tiny
+
+```{r,}
+probit_bully<-glm(selfhelp~bully, data=self_help, family=binomial(link='probit'))
+summary(probit_bully)
+```
+
+## An Empirical Illustration
+
+```{r,}
+pnorm(probit_bully$coefficients[1])
+pnorm(probit_bully$coefficients[1]+probit_bully$coefficients[2])
+```
+
+## An Empirical Illustration
+
+```{r,}
+logit_bully<-glm(selfhelp~bully, data=self_help, family=binomial(link='logit'))
+summary(logit_bully)
+```
+
+## An Empirical Illustration
+
+```{r,}
+inv.logit(logit_bully$coefficients[1])
+inv.logit(logit_bully$coefficients[1]+logit_bully$coefficients[2])
+```
+
+## An Empirical Illustration
+
+Notice that the coefficients from these two models produce virtually identical predicted probabilities of self-help conditional on bullying. Indeed, they perfectly match those produced by the cross-tabulation shown above. 
+
+## An Empirical Illustration
+
+We can plot the coefficients and predicted probabilities on the standard normal and logistic distribution functions: 
+
+```{r, echo=FALSE, out.width="75%", out.height="75%", fig.align='center'}
+include_graphics("probit_bully.png")
+```
+
+## An Empirical Illustration
+
+```{r, echo=FALSE, out.width="75%", out.height="75%", fig.align='center'}
+include_graphics("logit_bully.png")
+```
+
+## An Empirical Illustration
+
+Because the coefficient for bullying is positive, notice that it shifts respondents with *bully*=1 to the right, further along the S-curve. This effectively assigns a higher predicted probability to bullied youth compared to their non-bullied counterparts.
+
+## An Empirical Illustration
+
+Before we examine the binary response model more closely, let's estimate the full specification with all of the regressors of interest. We'll estimate the probit and logit models in sequences, with the population models and output as follows: 
+
+\footnotesize
+
+$$\Phi^{-1}[Pr(\text{SelfHelp}_{i}=1)] = \beta_{0} + \beta_{1}\text{Bully}_{i} + \beta_{2}\text{NonWhite}_{i} + \beta_{3}\text{Grades}_{i} + \beta_{5}\text{Drugs}_{i} + \beta_{6}\text{Crime}_{i} + \epsilon_{i}$$
+
+$$\Lambda^{-1}[Pr(\text{SelfHelp}_{i}=1)] =  \beta_{0} + \beta_{1}\text{Bully}_{i} + \beta_{2}\text{NonWhite}_{i} + \beta_{3}\text{Grades}_{i} + \beta_{5}\text{Drugs}_{i} + \beta_{6}\text{Crime}_{i} + \epsilon_{i}$$
+
+## An Empirical Illustration
+
+\tiny
+
+```{r,}
+probit_full<-glm(selfhelp~bully+male+nonwhite+grades+drugs+crime,
+                 data=self_help, family=binomial(link='probit'))
+summary(probit_full)
+```
+
+## An Empirical Illustration
+
+\tiny
+
+```{r,}
+logit_full<-glm(selfhelp~bully+male+nonwhite+grades+drugs+crime,
+                 data=self_help, family=binomial(link='logit'))
+summary(logit_full)
+```
+
+## An Empirical Illustration
+
+For easier comparison, I'll put these estimates and those from the LPM (with heteroscedasticity-robust standard errors) in one table:
+
+\footnotesize
+
+\begin{table}
+\centering
+\begin{tabular}{lccccc}
+\hline
+Regressor & LPM & Probit & Logit & $b_{L} / b_{P}$ & $b_{P} / b_{L}$ \\ \hline 
+Bullied & .074(.027)** & .288(.092)** & .494(.160)** & 1.72 & 0.59 \\
+Male & .024(.019) & .132(.082) & .226(.148) & 1.71 & 0.58 \\
+Non-White & -.008(.020) & -.011(.085) & -.024(.151) & 2.18 & 0.46 \\
+Grades & -.032(.008)*** & -.132(.032)*** & -.230(.056)*** & 1.74 & 0.57 \\
+Drugs & .054(.016)*** & .192(.051)*** & .326(.087)*** & 1.70 & 0.59 \\
+Crime & .063(.015)*** & .212(.047)*** & .358(.080)*** & 1.69 & 0.59 \\
+Constant & .273(.060)*** & -.582(.223)** & -.941(.387)* & 1.62 & 0.62 \\ \hline
+\multicolumn{6}{l}{*p<.05; **p<.01; ***p<.001}
+\end{tabular}
+\end{table}
+
+## An Empirical Illustration
+
+Notice that, in terms of the pattern of statistical significance, the results from all three models are identical. 
+
+Also notice that the ratios of the logit to probit coefficients are almost all in the 1.60 to 1.81 interval, or to consider the inverse, the ratios of probit to logit coefficients are almost all in the 0.56 to 0.62 interval. 
+
+## An Empirical Illustration
+
+Recall that the coefficients from the LPM are interpreted as the difference in $Pr(Y_{i}=1)$ between two hypothetical subjects who differ by one unit in $X_{ij}$. 
+
+So if we take the regressor *bully* we see that youth who have been repeatedly bullied exhibit a self-help probability that is 7.4 points higher than youth who have not been bullied. 
+
+## An Empirical Illustration
+
+The coefficients from the probit and logit models, on the other hand, are interpreted as the impact of a unit increase in the regressor on the latent, continuous response variable $Y^{*}_{i}$ (not on the observed, discrete response variable $Y_{i}$). 
+
+So in the probit model, youth who were bullied have a value on latent self-help that is 0.288 unites higher than non-bullied youth, and the corresponding difference in the logit model is 0.494. 
+
+The problem is that these values, and the very notion of *latent self-help* are meaningless in practical terms. We need some way to transform the coefficients into a more meaningful metric. Predicted probabilities and marginal effects are just such transformations. 
+
+## Predicted Probabilities and Marginal Effects
+
+Recall the formula to estimate the response probability in a binary response model:
+
+$$Pr(Y_{i}=1 \mid X_{i1},...,X_{ik}) = F(X\beta_{i})$$
+
+where $X\beta_{i}$ is the linear predictor and $F(\cdot)$ denotes either the standard normal of logistic distribution function:
+
+\footnotesize
+
+$$\text{Probit Predicted Probability} \colon (Y_{i} = 1 \mid X_{i1},...,X_{ik}) = \frac{1}{\sqrt{2\pi}} \int^{X\beta_{i}}_{-\inf} exp(-\frac{1}{2} \epsilon_{i})d\epsilon_{i}$$
+
+$$\text{Logit Predicted Probability} \colon (Y_{i} = 1 \mid X_{i1},...,X_{ik}) = \frac{exp(X\beta_{i})}{1+exp(X\beta_{i})}$$
+
+## Predicted Probabilities and Marginal Effects
+
+These formulas allow us to estimate a predicted probability for each respondent in the sample based on his or her actual values for each of the regressors, or otherwise to estimate a predicted probability for a hypothetical respondent with values for each of the regressors specified in the model. 
+
+## Predicted Probabilities and Marginal Effects
+
+Let's begin by inspecting the predicted probabilities from the probit model, the logit model, and for comparative purposes, the linear model (LPM). We will use the fully specified models we estimated at the end of the last section. 
+
+\footnotesize
+
+```{r, echo=F}
+df_probs<-data.frame(selfhelp<-self_help$selfhelp,
+                     probitp<-probit_full$fitted.values,
+                     logitp<-logit_full$fitted.values,
+                     lpmp<-lm2$fitted.values,
+                     probitxb<-probit_full$linear.predictors,
+                     logitxb<-logit_full$linear.predictors,
+                     lpmxb<-lm2$fitted.values)
+
+colnames(df_probs)<-c("selfhelp", "probitp", "logitp", "lpmp",
+                      "probitxb", "logitxb", "lpmxb")
+
+df <- as_tibble(df_probs)
+
+df.sum <- df %>%
+  select(selfhelp, probitp, logitp, lpmp, probitxb, logitxb, lpmxb) %>% # select variables to summarize
+  summarise_each(funs(min = min, 
+                      median = median, 
+                      max = max,
+                      mean = mean, 
+                      sd = sd))
+
+# reshape it using tidyr functions
+
+df.stats.tidy <- df.sum %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  select(var, mean, sd, min, max) # reorder columns
+
+print(df.stats.tidy)
+```
+
+
+## Predicted Probabilities and Marginal Effects
+
+The mean predicted probability from each model is virtually indistinguishable, and it should come as no surprise that the mean model-predicted probabilities are almost identical to the sample mean of the dependent variable, *selfhelp*. 
+
+## Predicted Probabilities and Marginal Effects
+
+Let's examine the three predicted probability distributions together:
+
+```{r, echo=F, message=FALSE, warning=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+df_boxplot<-data.frame(df_probs$probitp, df_probs$logitp, df_probs$lpmp)
+colnames(df_boxplot)<-c("probitp", "logitp", "lpmp")
+df_boxplot_long<-melt(df_boxplot)
+```
+
+## Predicted Probabilities and Marginal Effects
+
+\tiny
+
+```{r, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(df_boxplot_long, aes(x=variable, y=value)) +
+  geom_boxplot()
+```
+
+## Predicted Probabilities and Marginal Effects
+
+```{r, echo=F, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(df_boxplot_long, aes(x=value, color=variable)) +
+  geom_density(adjust=.40, size=.65) +
+  geom_vline(xintercept=mean(self_help$selfhelp), color='red',
+             linetype='dashed')
+```
+
+## Predicted Probabilities and Marginal Effects
+
+Although there are some modest differences, what seem more notable are the similarities in the distributions. 
+
+The probit and logit distributions, in particular, are difficult to distinguish from each other. 
+
+Indeed, the predicted probabilities from the latter two models are correlated higher than 0.999. 
+
+## Predicted Probabilities and Marginal Effects
+
+In a final comparative graph, we can plot the predicted probabilities from each model against their respective linear predictors.
+
+## Predicted Probabilities and Marginal Effects
+
+```{r, echo=F}
+df_probit<-data.frame(prob<-df_probs$probitp, xbeta<-df_probs$probitxb, 
+            model<-rep("Probit Model", times=length(df_probs$probitp)))
+df_logit<-data.frame(prob<-df_probs$logitp, xbeta<-df_probs$logitxb, 
+            model<-rep("Logit Model", times=length(df_probs$logitp)))
+df_lpm<-data.frame(prob<-df_probs$lpmp, xbeta<-df_probs$lpmxb, 
+            model<-rep("Linear Model", times=length(df_probs$lpmp)))
+colnames(df_probit)<-c("prob", "xbeta", "model")
+colnames(df_logit)<-c("prob", "xbeta", "model")
+colnames(df_lpm)<-c("prob", "xbeta", "model")
+
+df_xbp<-rbind(df_probit, df_logit, df_lpm)
+colnames(df_xbp)<-c("prob", "xbeta", "model")
+```
+
+```{r, echo=F, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(df_xbp, aes(x=xbeta, y=prob, color=model)) +
+  geom_point(position=position_jitter(width=.01, height=.05)) +
+  geom_smooth(method="loess", n=5)
+```
+
+## Predicted Probabilities and Marginal Effects
+
+NOTE: The predicted probabilities actually line up perfectly on the fitted lines but I used a position_jitter() option in the ggplot command to introduce a small perturbation so that it is possible to see roughly how many subjects cluster at the same probability. 
+
+Notice the curvilinearity in the predicted probabilities estimated from the probit and logit models. This is by design, because they track the S-curve of the standard normal and logistic c.d.f's, respectively. 
+
+Recall that the predicted probabilities from these models map onto their linear predictors by way of a non-linear function, $F(X\beta_{i})$. The predicted probabilities estimated from the linear mode, of course, exhibit no curvilinearity at all, because the predicted probability is exactly equal to the linear predictor from the model. 
+
+## Predicted Probabilities and Marginal Effects
+
+If we back the graph out a little bit further, in fact, we can see precisely where our sample falls on the full probit, logit, and linear continua:
+
+```{r, echo=FALSE, out.width="70%", out.height="70%", fig.align='center'}
+include_graphics("continua.png")
+```
+
+## Predicted Probabilities and Marginal Effects
+
+Now that we see the ease with which we can use the model coefficients to estimate a predicted probability for each respondent based on his or her own "profile" on the regressors, we can also use the coefficients to estimate the behavior of $Pr(Y_{i})$ with respect to incremental increases in $X_{i}$ for an average respondent. 
+
+Recall that, because the probit and logit models are inherently non-linear, changes in $Pr(Y_{i})$ must be estimated from specific values for all of the regressors (including the regressor for which a marginal effect is being calculated). 
+
+## Predicted Probabilities and Marginal Effects
+
+The reason is easy enough to show with a graph of a hypothetical S-curve. The probit model and fitted curve are as follows:
+
+$$Pr(Y_{i} = 1 \mid X_{i}) = \Phi(-3.0 + 1.0X_{i})$$
+
+## Predicted Probabilities and Marginal Effects
+
+```{r, echo=FALSE, out.width="75%", out.height="75%", fig.align='center'}
+include_graphics("probit_mfx_curve.png")
+```
+
+## Predicted Probabilities and Marginal Effects
+
+In this graph, we will consider the case in which we evaluate a one-unit increase from $X_{i}=1$ to $X_{i}=2$, and then a one-unit increase from $X_{i}=3$ to $X_{i}=4$. 
+
+In the instance on the left, the height of the vertical arrow is 0.136, indicating that the predicted $Pr(Y_{i}=1)$ increases by 0.136 when $X_{i}$ increases from 1 to 2 (0.159 - 0.023 = 0.136). 
+
+In the instance on the right, the height of the vertical arrow is 0.341, indicating that $Pr(Y_{i}=1)$ increases by 0.341 when $X_{i}$ increases from 3 to 4 (0.841 - 0.500 = 0.341). 
+
+## Predicted Probabilities and Marginal Effects
+
+In both cases, $X_{i}$ advances by one unit, it just happens to be the case that the regression curve is fairly shallow at $X_{i}=1$ but much steeper at $X_{i}=3$. Therefore, the practical impact of an incremental increase in $X_{i}$ on $Pr(Y_{i}=1)$ is sensitive to where the incremental increase occurs. 
+
+## Predicted Probabilities and Marginal Effects
+
+\begin{Huge}
+\begin{center}
+\textbf{Under Construction}
+\end{center}
+\end{Huge}
+
+\begin{center}
+\includegraphics[scale=.40]{under_construction.jpg}
+\end{center}
+
+## The End
+
+\begin{center}
+\includegraphics[scale=.20]{theend.jpg}
+\end{center}

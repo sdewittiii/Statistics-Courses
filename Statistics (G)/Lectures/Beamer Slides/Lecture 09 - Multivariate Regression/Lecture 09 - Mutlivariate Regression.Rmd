@@ -1,0 +1,1414 @@
+---
+title: "Lecture 09 - Multivariate Regression"
+author: "Samuel DeWitt"
+output:
+ beamer_presentation:
+    includes:
+      in_header: I:/My Drive/Prepped Courses/Statistics (G)/Lectures/Beamer Slides/Common Files/beamer-header.txt
+classoption: "aspectratio=169"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(car)
+library(olsrr)
+library(cowplot)
+library(lmtest)
+library(sandwich)
+library(ggpubr)
+options(scipen=10)
+```
+
+## Outline
+
+I.  Random Variables and Expectations
+II.  The Simple Regression Model
+III.  The Multiple Regression Model
+IV.  Assumptions of Linear Regression Model
+
+## 
+
+\centering
+\LARGE
+I. Random Variables and Expectations
+
+## Random Variables and Expectations
+
+The study of statistics is the study of random variables. 
+
+A **random variable** is any empirical property which varies stochastically in the population, and whose values cannot be predicted with certainty in
+advance. 
+
+Each possible value has a corresponding probability of occurrence, allowing construction of a probability distribution for their realization. 
+
+## Expected Values
+
+An expected value is simply a mean of a random variable, but it has the special significance of being a
+population mean. 
+
+A variance is also an expected value (i.e., a mean), but it is the squared expectation
+centered on another expected value (the population mean). 
+
+$$E(Y_{i}) = \mu \Rightarrow \mu = \frac{1}{N} \sum Y_{i}$$
+
+$$V(Y_{i}) = \sigma^{2} \Rightarrow \sigma^{2} = \frac{1}{N} \sum (Y_{i} - \mu)^{2}$$
+
+## Expected Values 
+
+In these formulas, summation is performed over a (possibly infinite) population of size N. The expected
+value and variance are also known as the **first** and **second moments**, respectively, of the random variable
+$Y_{i}$. Alternatively, they are known as the parameters of $Y_{i}$.
+
+## Point and Interval Estimation
+
+Statistics entails point and interval estimation of these unknown parameters, or at least of $E(Y_{i})$. 
+
+In a finite sample of $n$ subjects randomly selected from a well‐defined population, the parameters are estimated by the easily recognizable following formulas:
+
+$$\overline{Y} = \hat{\mu} = \frac{1}{n} \sum Y_{i}$$
+
+$$s^{2} = \hat{\sigma}^{2} = \frac{1}{n-1} \sum (Y_{i} - \overline{Y}) ^{2}$$
+
+## Point and Interval Estimation
+
+Note that the sample mean is itself a random variable, because it is specific to a finite sample of $n$ subjects, and there are infinite samples that can be drawn from the population. Since the sample mean is a random variable, it too has an expected value and a variance:
+
+$$E(\overline{Y}) = \mu$$
+
+$$V(\overline{Y}) = \frac{1}{n}\sigma^{2}$$
+
+## Unbiased and Efficient Estimators
+
+From the first expectation, we regard the sample mean as **unbiased**, meaning that it yields the true parameter on average. 
+
+In other words, in a world where we repeatedly (and hypothetically) sample units randomly from the population, the mean of the resulting distribution of sample means (a.k.a., the sampling distribution of means) is the parameter of interest. 
+
+## Unbiased and Efficient Estimators
+
+Using the second expectation, it is possible to quantify sampling error, or inherent randomness in parameter estimates that arises from the fact that each parameter estimate is sample specific and that there are an infinite number of ways of drawing a sample of $n$ subjects from the population. 
+
+The square root of the variance of an estimator yields what is known as a standard error, which represents a quantification of sampling error, and is in fact the standard deviation of this hypothetical distribution of sample means.
+
+## Unbiased and Efficient Estimators
+
+Another helpful property of the sample mean is that it is efficient, meaning that it yields the smallest variance around the parameter compared to any other estimator. In other words, if we have two unbiased estimators of $\mu$ (the mean and median, say), the efficient estimator is the one that satisfies the following property:
+
+$$\frac{1}{n-1} \sum (Y_{i}-\hat{\mu}_{1})^{2} < \frac{1}{n-1} \sum (Y_{i}-\hat{\mu}_{2})^{2}$$
+
+## Central Limit Theorem
+
+An additional property of the sample mean that comes in quite handy for statistical inference is that its distribution is (approximately) normal when the sample size is “large,” irrespective of how the random variable $Y_{i}$ is actually distributed in the population. This is known as the **central limit theorem**, and it allows us to characterize the estimator for the mean in the following way:
+
+$$\overline{Y} \sim N(\mu, \sigma^{2} /n)$$
+
+The $N$ signifies that the sample mean is normally distributed (this use of $N$ is not to be confused with the size of the population), where the normal distribution is defined by the two terms in parentheses.
+
+##
+
+\centering
+\LARGE
+II. The Simple Regression Model
+
+## The Simple Regression Model
+
+Consider the following two‐variable linear model, also known as a simple regression model. Assume for now that both variables are continuous:
+
+$$Y_{i} = \alpha + \beta X_{i} + \epsilon_{i}$$
+
+for i = 1,…,n. In this model, $Y_{i}$ is the dependent variable, $X_{i}$ is the independent variable, $\alpha$ is the intercept,
+$\beta$ is the slope, and $\epsilon_{i}$ is the error. 
+
+The subscripts denote the fact that $Y_{i}$, $X_{i}$, and $\epsilon_{i}$ are unit‐specific realizations of random variables, meaning that their values differ across units. Notice that $\alpha$ and $\beta$ do not have subscripts, representing the fact that they are the same for all units. 
+
+## The Simple Regression Model
+
+The slope represents the difference in the mean of $Y_{i}$ for two hypothetical observations which differ by one unit in $X_{i}$. The intercept represents the mean of $Y_{i}$ when $X_{i}$ equals 0, or else the point at which the regression line crosses the $Y$‐axis.
+
+In sample data, the two‐variable linear model is expressed using Latin letters rather than Greek letters:
+
+$$Y_{i} = a + bX_{i} + e_{i}$$
+
+where $a$ is an estimate of $\alpha$, $b$ is an estimate of $\beta$, and $e_{i}$ is technically known as a residual rather than an error. 
+
+## Parts of the Simple Regression Model
+
+There are two fundamental parts to the regression model – the prediction (the systematic part) and the error (the idiosyncratic part). This allows the model to be written in the following way:
+
+$$Y_{i} = \text{prediction}_{i} + \text{error}_{i} = \hat{Y}_{i} + e_{i}$$
+
+where it is the case that: 
+
+$$\hat{Y}_{i} = a + bX_{i}$$
+
+## Parts of the Simple Regression Model
+
+The prediction refers to the regression or trend line as it would appear in a scatterplot of $Y_{i}$ against $X_{i}$.
+
+The error refers to the fact that the data points do not line up perfectly on the regression line. It absorbs three things: inherent randomness in $Y_{i}$, errors in the measurement of $X_{i}$ and $Y_{i}$, and the effects on $Y_{i}$ of variables that are not included in the model.
+
+## Parts of the Simple Regression Model
+
+Importantly, the prediction part of the model can be thought of as a mean, it just happens to be a conditional mean:
+
+$$\hat{Y}_{i} = \overline{Y} \mid X_{i}$$
+
+## Unbiased and Efficient Estimator - Conditional Mean
+
+By referring to the prediction part of the regression equation as a conditional mean, we can characterize its properties in the same way as we would an unconditional mean. 
+
+Specifically, we are interested in estimators of the conditional mean that are unbiased and efficient. We can use the method of ordinary least squares (OLS) to provide unbiased and efficient estimates of $\alpha$ and $\beta$. 
+
+## Unbiased and Efficient Estimator - Conditional Mean
+
+The least squares principle involves choosing values for the regression coefficients that minimize the sum of squared errors:
+
+$$min \sum^{n}_{i=1} \Rightarrow min \sum^{n}_{i=1}(Y_{i}-\hat{Y}_{i})^{2} \Rightarrow min \sum^{n}_{i=1}(Y_{i}-a-bX_{i})^{2}$$
+
+## Unbiased and Efficient Estimator - Conditional Mean
+
+The formal expressions of the OLS estimator for the constant and slope in a two‐variable model are:
+
+$$b = \frac{\sum(Y_{i} - \overline{Y})(X_{i}-\overline{X})}{\sum (X_{i}-\overline{X})^{2}}$$
+
+$$a = \overline{Y} - b\overline{X}$$
+
+## Unbiased and Efficient Estimator - Conditional Mean
+
+Because sample means are random variables, and a regression slope is a (conditional) mean, it has expectations:
+
+$$E(b) = \beta$$
+
+$$V(b) = \frac{\sigma^{2}_{e}}{\sum(X_{i}-\overline{X})^{2}}$$
+
+where the residual variance is estimated from sample data by the formula:
+
+$$\sigma^{2}_{e} = s^{2}_{e} = \frac{1}{n-2}\sum e^{2}_{i} = \frac{1}{n-2} \sum (Y_{i}-\hat{Y}_{i})^{2} = \frac{1}{n-2} \sum (Y_{i} - a -bX_{i})^{2}$$
+
+## Unbiased and Efficient Estimator - Conditional Mean
+
+The expected value confirms that the OLS estimator is unbiased (yielding the parameter, on average, in repeated random samples) and, although the proof is not shown here, the OLS estimator can also be shown to be efficient (yielding the smallest variance compared to other estimators in its class).
+
+## A Two-Variable Illustration
+
+Suppose that we regress the violent crime rate per 100,000 population on the percentage of persons that live below the poverty level, using data for all 50 states in the year 2000. The violent crime rate encompasses murder and non‐negligent manslaughter, forcible rape, robbery, and aggravated assault. The data are from the 2002 edition of the Statistical Abstracts of the United States.
+
+```{r, echo=FALSE}
+state_data00 <- read_excel("00_statedata00.xls")
+```
+
+We are interested in obtaining estimates of the following population model:
+
+$$\text{Violence}_{i} = \alpha + \beta \text{Poverty}_{i} + \epsilon_{i}$$
+
+## First, Descriptive Statistics
+
+Let’s first get some descriptive statistics of the two variables and inspect a histogram of the dependent variable. 
+
+## First, Descriptive Statistics
+
+ \tiny
+```{r, echo=TRUE}
+summary(state_data00$violrate)
+sd(state_data00$violrate)
+summary(state_data00$povrate)
+sd(state_data00$povrate)
+```
+
+## Scatterplot of Dependent Variable 
+
+```{r, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=violrate)) +
+  geom_histogram(binwidth=25)
+```
+
+
+## Intercept-Only Regression Model
+
+\small
+So the average state has 420.3 violent crimes per 100,000 ($s_{Y}$ = 189.2) and an 11.4% poverty rate ($s_{X}$ =2.9). As a convenient starting point, let’s estimate an intercept‐only regression model:
+
+\tiny
+```{r,}
+summary(lm(formula=violrate~1, data=state_data00))
+```
+
+## Intercept-Only Regression Model
+
+Notice that a regression model with no regressors yields the sample mean of violrate for the estimate of the intercept ($a$ = 420.3). This must be true by definition. Note also that the “Residual standard error” is the standard deviation of violrate ($s_{e}$ = 189.2). 
+
+## Scatterplot - Poverty & Violence
+
+Before estimating the model of interest, it is always a good idea to have a look at a scatterplot, in which the means of $Y_{i}$ and $X_{i}$ can be used to partition the plot into quadrants.
+
+## Scatterplot - Poverty & Violence
+
+```{r, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=povrate, y=violrate)) +
+  geom_point(alpha=.001) +
+  geom_hline(yintercept=mean(state_data00$violrate),
+             linetype='dashed', color='red') +
+  geom_vline(xintercept=mean(state_data00$povrate),
+             linetype='dashed', color='red') +
+  geom_text(aes(label=state))
+```
+
+## Scatterplot - Poverty & Violence
+
+Notice that there are 34 states in the diagonal quadrants (B, C), but only 15 states in the off‐diagonal quadrants (A, D). (One state, PA, is indeterminate.) This actually provides an important clue about whether the relationship between poverty and violence is positive or negative. 
+
+In this instance, the slope will be positive. We just want to know next whether it is significantly positive or not. (As a final aside, note that the regression line will go right through the intersection of the means of $Y_{i}$ and $X_{i}$.)
+
+## Bivariate Regression Model
+
+The output from the regression model of interest is provided below:
+
+\tiny
+```{r,}
+summary(lm(formula=violrate~povrate, data=state_data00))
+```
+
+## Bivariate Regression Model
+
+The coefficient on the variable povrate is the estimate of the slope, $b$.
+
+A slope represents the difference in the mean of $Y_{i}$ for two hypothetical observations which differ by one unit in $X_{i}$. In this example, states in which 1 percent more people live in poverty have 20.4 more violent crimes per 100,000, on average. 
+
+## Bivariate Regression Model
+
+The estimate of the intercept, $a$, is 187.3, which represents the mean violent crime rate in a state with 0.0% poverty. 
+
+Since no such state exists in the data, the actual value of the constant is meaningless in this example.
+
+The linear equation for this model is therefore:
+
+$$\text{Violence}_{i} = 187.3 + 20.4\text{Poverty}_{i} + e_{i}$$
+
+## Bivariate Regression Model
+
+In addition to the coefficient for the slope of the relationship between poverty and violence, we are provided an estimate of the standard error as well as the p-value for a test of the null hypothesis $H_{0}$: $\beta$=0, against the alternative hypothesis, $H_{1}$: $\beta \ne 0$. This happens to be a t-test with df = $n-2$. 
+
+$$t=\frac{b}{s_{b}} = \frac{20.367}{8.821} = 2.309$$
+
+When judged against a 5-percent (two-tailed) critical value of 2.01 (not shown in the output), this t-test is statistically significant. We can thus conclude that there is a statistically significant relationship between poverty and violent crime. 
+
+## Bivariate Regression Model
+
+Notice that the 95-percent confidence interval for the slope is: 
+
+$$b \pm t^{.05/2}_{48} x s_{b} = 20.367 \pm 2.01 * 8.821 = [2.637, 38.097]$$
+
+The shorthand interpretation of this interval is that we have 95% confidence that the true slope of the poverty-violence relationship is between 2.637 and 38.097. 
+
+## Bivariate Regression Model - Predicted Values
+
+An advantage of the regression equation shown above is the ability to get predicted values of $Y_{i}$ for hypothetical values of $X_{i}$. Let's have another look at the equation and consider 6 hypothetical states which span the poverty continuum. 
+
+$$\text{Violence}_{i} = 187.3 + 20.4\text{Poverty}_{i} + e_{i}$$
+
+\small
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lc}
+Poverty Rate & Predicted Violent Crime Rate \\ \hline \hline
+8.0 & 187.336 + (20.367*8.0)=`r round(187.336+(20.367*8.0),3)` \\
+10.0 & 187.336 + (20.367*10.0)=`r round(187.336+(20.367*10.0),3)` \\
+12.0 & 187.336 + (20.367*12.0)=`r round(187.336+(20.367*12.0),3)` \\
+14.0 & 187.336 + (20.367*14.0)=`r round(187.336+(20.367*14.0),3)` \\
+16.0 & 187.336 + (20.367*16.0)=`r round(187.336+(20.367*16.0),3)` \\
+18.0 & 187.336 + (20.367*18.0)=`r round(187.336+(20.367*18.0),3)` \\ \hline
+\end{tabular}
+\end{table}
+
+## Bivariate Regression Model - Regression Line
+
+Now we’ll have another look at the scatterplot, but this time we’ll overlay the regression line. 
+
+To motivate additional discussion of the regression model, let’s plot both the unconditional mean and the conditional mean in the same graph.
+
+## Bivariate Regression Model - Regression Line
+
+```{r, message=FALSE, fig.align='center', fig.height=2.25, fig.width=5.25}
+ggplot(state_data00, aes(x=povrate, y=violrate)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F, color='darkred') +
+  geom_hline(yintercept=mean(state_data00$violrate), linetype='dashed',
+             color='red')
+```
+
+## Bivariate Regression Model - Regression Line
+
+What we are really interested in knowing when we estimate a regression model is whether the conditional mean, denoted by the solid sloping line, provides a better overall fit to the data points than the unconditional mean, signified by the dashed horizontal line. 
+
+In other words, does knowing a state’s poverty rate help us to predict, with better than chance accuracy (i.e., better than the mean violent crime rate), that state’s violent crime rate? 
+
+## Bivariate Regression Model - Regression Line
+
+- If the answer is NO:
+  - The mean violent crime rate is the same (i.e., a constant) no matter the state’s poverty rate, implying that the regression line is equivalent to the sample mean and thus there is no correlation between poverty and violence. 
+
+- If the answer is YES:
+  - The mean violent crime rate differs depending on a state’s poverty rate. In this example, the answer is YES, as indicated by the statistical significance of the poverty‐violence relationship.
+  
+##
+
+\centering
+\LARGE
+III. The Multiple (Multivariate) Regression Model
+
+## The Multiple Regression Model
+
+Now, when there are multiple independent variables, the notation for the regression model changes slightly, with appropriate substitutions for sample equivalents:
+
+$$Y_{i} = \beta_{0} + \beta_{1}X_{i1}+...B_{j}X_{ij}+\epsilon_{i}$$
+
+where i = 1,…, $n$ indexes units and $j$ = 1,...,$k$ indexes regressors. The parameter $\beta_{0}$ is used to represent the intercept (in place of $\alpha$, which was the intercept in the two‐variable regression model), and represents $E(Y_{i})$ when all of the $X_{ij}$'s jointly equal 0. The parameter $\beta_{j}$ represents the slope corresponding to an arbitrary regressor, which is one of $k$ regressors. 
+
+## The Multiple Regression Model
+
+Each slope is now technically known as a “partial slope” or “partial coefficient,” because it represents the mean difference in $E(Y_{i})$ for two hypothetical observations which differ by one unit in $X_{ij}$, holding all other $X_{ij}$'s in the model constant. The expected value and variance of the slope in a multiple regression model are:
+
+$$E(b_{j}) = \beta_{j}$$
+
+$$V(b_{j}) = \frac{\sigma^{2}_{e}}{\sum (X_{ij} - \overline{X}_{j})^{2}*(1-R^{2}_{j})}$$
+
+$R^{2}_{j}$ is the squared multiple correlation from a model in which regressor $j$ is regressed on all of the other $k-1$ regressors in the model. 
+
+## The Multiple Regression Model
+
+The error variance is estimated by:
+
+$$\hat{\sigma}^{2}_{e} = s^{2}_{e} = \frac{1}{n-k-1} \sum e^{2}_{i} = \frac{1}{n-k-1} \sum (Y_{i} - \beta_{0} - \beta_{1}X_{i1} - ... -  \beta_{j}X_{ij})^{2}$$
+
+The denominator of the error variance estimated from the sample, showing the degrees of freedom that are lost as a penalty for having to estimate $k + 1$ unknown parameters ($k$ slopes + 1 intercept).
+
+## The Multiple Regression Model - Example
+
+To work through an example of multiple regression, let’s supplement our poverty‐violence analysis with some additional variables - percent with a college degree (25+ years of age), percent black, and percent of the population that lives in an urban area. The population model of interest is now:
+
+$$\text{Violence}_{i} = \beta_{0} + \beta_{1}\text{Poverty}_{i}+\beta_{2}\text{College}_{i}+ \beta_{3}\text{Black}_{i}+\beta_{4}\text{Urban}_{i}+\epsilon_{i}$$
+
+## The Multiple Regression Model - Descriptive Statistics
+
+\footnotesize
+
+Let’s get the descriptive statistics, followed by the regression output from this model:
+
+```{r, warning=FALSE}
+df <- as_tibble(state_data00)
+
+df.sum <- df %>%
+  select(violrate, povrate, college, black, urban) %>% # select variables to summarize
+  summarize_each(funs(min = min, 
+                      q25 = quantile(., 0.25), 
+                      median = median, 
+                      q75 = quantile(., 0.75), 
+                      max = max,
+                      mean = mean, 
+                      sd = sd))
+
+# reshape it using tidyr functions
+
+df.stats.tidy <- df.sum %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  select(var, min, q25, median, q75, max, mean, sd) # reorder columns
+
+print(df.stats.tidy)
+```
+
+## The Multiple Regression Model - Model Summary 1
+
+\tiny
+```{r,}
+with(state_data00, summary(glm(violrate~povrate+college+black+urban)))
+```
+
+
+## The Multiple Regression Model - Model Summary 2
+
+\tiny
+```{r,}
+with(state_data00, summary(lm(violrate~povrate+college+black+urban)))
+```
+
+**Note** - I switched to using the glm() and lm() functions together because each provides only part of the ANOVA output for the errors from the model (the Null and Residual Deviance section) and the F-Ratio.
+
+## Regression Output Explanation
+
+Before looking at the coefficient table, let’s examine some of the other information provided in the regression output. 
+
+## Regression Output Explanation - ANOVA
+
+The ANOVA table partitions the variability in state violent crime rates into its constituent sums of squares. Each sum of squares (SS) has degrees of freedom (df), and dividing SS by its corresponding df yields a mean square (MS) or variance. In R output, the **Null*** deviance is equivalent to the **Total** sum of squares. In other words:
+
+\tiny
+
+$$\text{Total (Null) Mean Square: } MS_{T} = \frac{SS_{T}}{df_{T}} = \frac{1}{n-1}\sum^{n}_{i=1} (Y_{i} - \overline{Y})^{2}$$
+
+$$\text{Model Mean Square: } MS_{M} = \frac{SS_{M}}{df_{M}} = \frac{1}{k}\sum^{n}_{i=1} (\hat{Y}_{i} - \overline{Y})^{2}$$
+
+$$\text{Residual Mean Square: } MS_{R} = \frac{SS_{R}}{df_{R}} = \frac{1}{n-k-1}\sum^{n}_{i=1} (Y_{i} - \hat{Y}_{i})^{2}$$
+
+## Regression Output Explanation - F-Test
+
+The F-statistic is provided in the output from the lm() function and can be computed using the equations above and some algebra - if we know the Total (Null) Sum of Squares and we know the Residual Sum of Squares, then simple subtraction will provide us with the Model Sum of Squares (recall that $SS_{T} = SS_{W} + SS_{B}$). 
+
+$$F_{k, n-k-1} = \frac{MS_{M}}{MS_R}=\frac{SS_{M}/df_{M}}{SS_{R}/df_{R}} = \frac{(1754071-792913)/4}{792913/45} = `r round(((1754071-792913)/4)/(792913/45),2)`$$
+
+where $df_{M}$ = k, representing the number of regressors, and $df_{R}$ = n – k – 1. 
+
+## Regression Output Explanation - F-Test
+
+The F‐test and corresponding p‐value are for the test of the null hypothesis that the coefficients are jointly zero, that is, $H_{0}: \beta_{1} = \beta_{2} = \beta_{3} = \beta_{4} = 0$. 
+
+The alternative hypothesis for this test is that at least one coefficient differs from zero. In a manner of speaking, this is the test of the significance of the model. The p‐value already indicates that the model is highly significant, with p < 0.001.
+
+## Regression Output Explanation - $R^{2}$
+
+The R‐square is the coefficient of determination, and quantifies the proportion of the total variability in violent crime rates (technically, the total sum of squares) that is “explained” by the regressors:
+
+$$R^{2} = \frac{SS_{M}}{SS_{T}} = 1-\frac{SS_{R}}{SS_{T}}$$
+
+The model indicates that 54.8% of the variability in violent crime rates is explained jointly by poverty, education, race, and urbanicity. The adjusted R‐square makes a degrees‐of‐freedom correction to the $R^{2}$:
+
+$$\text{Adjusted } R^{2} = 1-\frac{MS_{R}}{MS_{T}}$$
+
+## Regression Output Explanation - Residual Standard Error
+
+The Residual standard error refers to the square root of $MS_{R}$, which is simply the residual standard deviation:
+
+$$s_{e} = \sqrt{\frac{1}{n-k-1} \sum^{n}_{i=1} (Y_{i} - \hat{Y}_{i})^{2}}$$
+
+## Regression Output Explanation - Coefficients
+
+The variable povrate remains statistically significant when additional regressors are introduced into the model. 
+
+Specifically, two hypothetical states that differ by 1 percentage point in their poverty rate differ by 18.626 violent crimes per 100,000, on average and all else equal. 
+
+## Regression Output Explanation - Coefficients
+
+We also see that black and urban contribute to state‐to‐state differences in violent crime rates. 
+
+For example, two states which differ by 1% in the percentage black population differ by 7.316 violent crimes per 100,000, on average and all else equal, whereas two states which differ in by 1% in the urban population differ by 4.382 violent crimes per 100,000, on average and all else equal. 
+
+The variable college is unrelated to violent crime net of poverty, race, and percent urban.
+
+## Regression Output Explanation - Comparing Coefficients
+
+Once we have estimated the model, we can get some sense of the relative influence of each of the regressors on the dependent variable. 
+
+It is technically improper to directly compare regression coefficients in a model. 
+
+This is because the coefficients are interpreted in the scale of their respective regressors and are not directly comparable. 
+
+## Regression Output Explanation - Comparing Coefficients
+
+However, we can get standardized coefficients, which provide scale‐free coefficients.
+
+Standardized coefficients represent the difference in the mean of $Y_{i}$, scaled by the standard deviation of $Y_{i}$, for two hypothetical observations that differ by one standard deviation in $X_{i}$, holding all other regressors constant:
+
+$$b_{j}^{*} = b_{j} * \frac{s_{X_{j}}}{s_{Y}}$$
+
+## Regression Output Explanation - Standardized Coefficients
+
+\tiny
+
+```{r,}
+with(state_data00, summary(lm(scale(violrate)~scale(povrate)+scale(college)+
+                                scale(black)+scale(urban))))
+```
+
+## Regression Output Explanation - Standardized Coefficients
+
+In this case, the standardized coefficients indicate that urban population is the most strongly related to violent crime rates, followed by the percent black and then poverty rates. 
+
+To illustrate, states which differ in their urban population by one standard deviation (20.6, as shown in the descriptive table above) differ in their violent crime rates by 0.477 standard deviations, specifically by 90.8 violent crimes per 100,000 (0.48 \* 189.2 = 90.8), on average and all else equal. 
+
+NOTE: We can also obtain a variation on the standardized coefficient by using the ppcor package, which will provide partial and semi-partial correlations. 
+
+## Qualitative Regressors
+
+Now let's consider the case in which we have a regressor that is categorical rather than continuous, such as census region. The distribution of Census region is provided below:
+
+\tiny
+```{r,}
+state_data00$region<-as.factor(state_data00$region)
+summary(state_data00$region)
+```
+
+## Qualitative Regressors
+
+We can inspect regional differences in the mean violent crime rate using the tapply() command:
+
+```{r,}
+## Mean Differences Across Region
+with(state_data00, tapply(violrate, region, mean))
+## SD Differences Across Region
+with(state_data00, tapply(violrate, region, sd))
+```
+
+## Qualitative Regressors
+
+There appear to be obvious regional differences in violence, with southern states leading the pack by a fairly large margin. 
+
+Because the numerical categories are nominal rather than ordinal, however, it is impossible to enter it into a regression model and obtain a meaningful slope. 
+
+## Qualitative Regressors
+
+Instead, it is necessary to tell R that the variable is what is known as a "factor" variable - 
+
+I have already done this and you can double check to see if you have by looking at the contents of a data frame. 
+
+A factor variable will be listed in the data frame as a "Factor with # levels..." where # is replaced by however many unique categories the variable has (in this case, 4). R will then automatically exclude one category for you as a **reference** category.
+
+## Qualitative Regressors - Model Output
+
+\tiny
+
+```{r,}
+state_data00$region<-relevel(state_data00$region, ref="South")
+with(state_data00, summary(lm(violrate~region)))
+```
+
+## Qualitative Regressors - Model Output
+
+Notice that the model excludes the "South" category - this is because I told it to using the relevel() function. 
+
+This means that the intercept is now the mean violent crime rate in Southern states, whereas the slopes are contrasts between each region of interest and the South. 
+
+## Qualitative Regressors - Model Output
+
+This can be confirmed by inspecting the regional means in the table above. 
+
+For example, the coefficient for Northeast indicates that Northeastern states have 226.92 fewer violent crimes per 100,000 than Southern states, on average ($a - b_{Northeast}$ = 544.25 - 226.92 = `r 544.25-226.92`). 
+
+## Qualitative Regressors - Model Output
+
+If I want different contrasts I have to use the relevel() function to shift the reference category to another region. Alternatively, I could create a series of dummy variables for each category and enter them individually into the model.
+
+## Qualitative Regressors - Model Output
+
+The important thing to remember is that dummy variables provide a convenient way of entering one or more categorical variables into a regression model. 
+
+However, the slopes do not have the usual interpretation, in the sense of representing a contrast between two observations which differ by one unit in the regressor. 
+
+Instead, it is a contrast between observations which are included in the model and the reference category observations that are absorbed into the intercept value. 
+
+## Qualitative Regressors - Full Model
+
+Finally, let’s estimate a fully specified model of violent crime to ascertain whether regional differences persist once the other relevant regressors are included. The population model is:
+
+$$\text{Violence}_{i} = \beta_{0} + \beta_{1}\text{Poverty}_{i}+\beta_{2}\text{College}_{i}+ \beta_{3}\text{Black}_{i}+\beta_{4}\text{Urban}_{i}+\beta_{5}\text{Region}_{i}+\epsilon_{i}$$
+
+Region is understood to be a categorical variable represented by three dummy variables, meaning that $\beta_{5}$ comprises three coefficients (reference = south) instead of one.
+
+## Qualitative Regressors - Full Model
+
+\tiny
+
+```{r,}
+with(state_data00, summary(lm(violrate~povrate+college+black+urban+region)))
+```
+
+## Qualitative Regressors - Testing Equality
+
+\footnotesize
+
+```{r,}
+lm1<-with(state_data00, lm(violrate~povrate+college+black+urban+region))
+linearHypothesis(lm1, c("regionMidwest=0", "regionNortheast=0", "regionWest=0"))
+```
+
+## Qualitative Regressors - Testing Equality
+
+I use the linearHypothesis() function from the car package to test the hypothesis that the individual coefficients from the region variable are equal to 0 (the test uses the F distribution).
+
+The alternative hypothesis being tested is that **at least one** of those coefficients does not equal 0 (the null being that all 3 are equal to 0). 
+
+## Qualitative Regressors - Testing Equality
+
+The important part to focus on in the results from that test is the final column that indicates the probability of observing that F-ratio if the null hypothesis were true - because it is above any conventional level of statistical significance, we have to accept the null hypothesis that all three coefficients jointly equal 0.
+
+Practically, this means that controlling for poverty, college education, percent black, and percent urban accounts for the regional differences in violent crime rate we observed earlier.
+
+##
+
+\centering
+\LARGE
+IV. Assumptions of the Linear Regression Model 
+
+## Assumptions of the Linear Model
+
+There are three groups of basic assumptions required by the linear model:(1) assumptions about the response (outcome) variable; (2) assumptions about the regressors (predictor variables); (3) assumptions about the residuals.
+
+## Assumptions of the Linear Model - Response
+
+The three assumptions concerning the response variable ($Y_{i}$) are: 
+
+1.  Linearity: the response variable is linearly related to the regressors
+2.  Additivity: the response variable is additively related to the regressors
+3.  Reliable measurement: the response variable is measured without error
+
+## Assumptions of the Linear Model - Regressors
+
+The three assumptions concerning the regressors ($X_{i}$) are: 
+
+1.  Linear independence: the regressors are not perfectly linearly related
+2.  Reliable measurement: the regressors are measured without error
+3.  Exogeneity: the regressors are not correlated with the residual
+
+## Assumptions of the Linear Model - Residuals
+
+The four assumptions concerning the residuals ($e_{i}$) are:
+
+1.  Zero mean: The residuals have an expected value of 0.
+2.  Homoscedasticity: The residuals have constant variance.
+3.  Serial independence: The residuals are independent.
+4.  Normality: The residuals are normally distributed.
+
+## Assumptions of the Linear Model
+
+With the exception of the normality assumption, these are known as the Gauss-Markov assumptions. 
+
+When these assumptions are satisfied, the least squares estimator is BLUE (the best linear unbiased estimator). 
+
+Some assumptions are more central than others, and can be violated with little practical consequence. Other assumptions have straightforward remedies in instances where they are likely to be violated. 
+
+## Assumptions of the Linear Model
+
+\footnotesize
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lc} 
+\hline
+Violation of OLS Assumption & Is OLS Biased? \\ \hline
+Assumptions Concerning the Response Variable ($Y_{i}$) & \\
+Linearity & Yes \\
+Additivity & Yes \\
+Reliable Measurement & Maybe \\
+Assumptions COncerning the Regressors ($X_{i}$) & \\
+Linear Independence  & No \\
+Reliable Measurement & Maybe \\
+Exogeneity & Yes \\
+Assumptions Concerning the Residuals ($\epsilon_{i}$) & \\
+Zero Mean & Yes \\
+Homoscedasticity & No \\
+Serial Independence & No \\
+Normality & No \\ \hline
+\end{tabular}
+\end{table}
+
+## Assumptions of the Linear Model
+
+For the remainder of this section, the baseline model of interest will be as follows:
+
+$$\text{Violence}_{i} = \beta_{0} + \beta_{1}\text{Poverty}_{i}+\beta_{2}\text{College}_{i}+ \beta_{3}\text{Black}_{i}+\beta_{4}\text{Urban}_{i}+\beta_{5}\text{Region}_{i}+\epsilon_{i}$$
+
+## Assumptions Concerning the Response Variable - Linearity 
+
+A key functional form assumption of the regression model is that the relationship between $Y_{i}$ and each of the regressors is well captured by a straight line. This assumption is what allows us to characterize the model in a way that is linear in the variables:
+
+$$Y_{i} + \beta_{0} + \beta_{1}X_{i1} + ...+\beta_{j}X_{ij}+\epsilon_{i}$$
+
+A much more general assumption, which accommodates a much broader class of models, is that the model can be expressed in a way that is **linear in the parameters**:
+
+$$f(Y_{i}) = \beta_{0} + \beta_{1}f(X_{i1})+...+\beta_{j}f(X_{ij})+\epsilon_{i}$$
+
+
+## Assumptions Concerning the Response Variable - Linearity 
+
+It is therefore possible to estimate non-linear relationships in a completely linear setting, as long as we can transform $Y_{i}$ and/or $X_{ij}$ in such a way that the basic linear form in the $\beta_{j}$'s is preserved. 
+
+## Assumptions Concerning the Response Variable - Linearity 
+
+Some examples of fundamentally non-linear models that can be expressed as linear in the parameters are: 
+
+$$\text{Polynomial model: } Y_{i} + \beta_{0} + \beta_{1}X_{i} + \beta_{2}X^{2}_{i}+\beta_{3}X^{3}_{i}+\epsilon_{i}$$
+$$\text{Loglinear (exponential) model: } ln(Y_{i}) = \beta_{0}+\beta_{1}X_{i}+\epsilon_{i}$$
+$$\text{Semilog (logarithmic) model: } Y_{i} = \beta_{0} + \beta_{1}ln(X_{i1})+\epsilon_{i}$$
+$$\text{Loglog model: } ln(Y_{i}) = \beta_{0} + \beta_{1}ln(X_{i1}) + \epsilon_{i}$$
+
+## Assumptions Concerning the Response Variable - Linearity Diagnostics
+
+Let’s begin with the polynomial model. A good way to evaluate the linearity assumption is to plot the model residuals against each of the regressors. 
+
+We want to ensure that a straight line provides a reasonably good fit to the data. This can be done using the crPlots() function in the car package, or augmented component‐plus‐residual plot, which will provide post‐estimation plots of the residuals against the regressors.
+
+In addition to including a regression line, we can add a lowess smoother, which is a nonparametric estimator that can accommodate very flexible functional forms:
+
+## Assumptions Concerning the Response Variable - Linearity Diagnostics
+
+```{r, warning=FALSE, fig.align='center', fig.height=2.75, fig.width=5}
+crPlots(lm1, terms=~povrate, line=T, smooth=T, ylab="Comp+Resid")
+```
+
+## Assumptions Concerning the Response Variable - Linearity Diagnostics
+
+```{r, warning=FALSE, fig.align='center', fig.height=2.75, fig.width=5}
+crPlots(lm1, terms=~college, line=T, smooth=T, ylab="Comp+Resid")
+```
+
+## Assumptions Concerning the Response Variable - Linearity Diagnostics
+
+```{r, warning=FALSE, fig.align='center', fig.height=2.75, fig.width=5}
+crPlots(lm1, terms=~black, line=T, smooth=T, ylab="Comp+Resid")
+```
+
+## Assumptions Concerning the Response Variable - Linearity Diagnostics
+
+```{r, warning=FALSE, fig.align='center', fig.height=2.75, fig.width=5}
+crPlots(lm1, terms=~urban, line=T, smooth=T, ylab="Comp+Resid")
+```
+
+## Assumptions Concerning the Response Variable - Polynomial Model
+
+There appears to be some mild non‐linearity, mostly in the percent black variable. So let’s augment our original regression model with the square of this regressor. The model to be estimated is:
+
+\small
+$$\text{Violence}_{i} = \beta_{0} + \beta_{1}\text{Poverty}_{i}+\beta_{2}\text{College}_{i}+ \beta_{3}\text{Black}_{i}+\beta_{4}\text{Urban}_{i}+\beta_{5}\text{Region}_{i}+\beta_{6}\text{Black}^{2}_{i}+\epsilon_{i}$$
+
+## Assumptions Concerning the Response Variable - Polynomial Model
+
+\tiny
+
+```{r,}
+state_data00$black_sq<-state_data00$black^2
+with(state_data00, summary(lm(violrate~povrate+college+black+black_sq+urban+region)))
+```
+
+## Assumptions Concerning the Response Variable - Polynomial Model
+
+There is indeed some non‐linearity in black, as indicated by the significance of the quadratic term. The fact that the linear term is positive (27.6) and the quadratic term is negative (–0.58) indicates something about the functional form. 
+
+The story appears to be that increases in percent black correspond with higher violent crime rates until a threshold is reached, at which point further increases in percent black are uncorrelated with violence.
+
+## Assumptions Concerning the Response Variable - Polynomial Model
+
+In order to determine where this threshold occurs, we first need to differentiate the model with respect to percent black:
+
+\tiny
+
+$$\frac{\partial\text{Violence}_{i}}{\partial\text{Black}_{i}} =\frac{\partial[\beta_{0} + \beta_{1}\text{Poverty}_{i}+\beta_{2}\text{College}_{i}+ \beta_{3}\text{Black}_{i}+\beta_{4}\text{Urban}_{i}+\beta_{5}\text{Region}_{i}+\beta_{6}\text{Black}^{2}_{i}+\epsilon_{i}]}{\partial\text{Black}_{i}} = \beta_{3} + 2*\beta_{6}\text{Black}_{i} $$
+
+## Assumptions Concerning the Response Variable - Polynomial Model
+
+Then, we set the first derivative equal to zero:
+
+$$\beta_{3} + 2*\beta_{6}\text{Black}_{i}=0$$
+
+Finally, we solve the equation for black to identify the inflection point, which in this case is a maximum:
+
+$$\text{Max}(\text{Black}_{i}) = \frac{-\beta_{3}}{2*\beta_{6}}=\frac{-27.547}{2*(-0.576)} = 23.91$$
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+When we have variables that are continuous and non-zero, it can also be advantageous to consider a logarithmic transformation. Let's first have a look at some scatterplots. 
+
+```{r,}
+## Log transformations
+state_data00$lnviolrate<-with(state_data00, log(violrate))
+state_data00$lnpovrate<-with(state_data00, log(povrate))
+state_data00$lncollege<-with(state_data00, log(college))
+state_data00$lnblack<-with(state_data00, log(black))
+state_data00$lnurban<-with(state_data00, log(urban))
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+```{r, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=lnpovrate, y=lnviolrate)) + 
+  geom_point() +
+  geom_smooth(method="loess", se=F, linetype="dashed", color="darkred") +
+  geom_smooth(method="lm", se=F, color="red")
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+```{r, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=lncollege, y=lnviolrate)) + 
+  geom_point() +
+  geom_smooth(method="loess", se=F, linetype="dashed", color="darkred") +
+  geom_smooth(method="lm", se=F, color="red")
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+```{r, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=lnblack, y=lnviolrate)) + 
+  geom_point() +
+  geom_smooth(method="loess", se=F, linetype="dashed", color="darkred") +
+  geom_smooth(method="lm", se=F, color="red")
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+```{r, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=lncollege, y=lnviolrate)) + 
+  geom_point() +
+  geom_smooth(method="loess", se=F, linetype="dashed", color="darkred") +
+  geom_smooth(method="lm", se=F, color="red")
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+With the possible exception of lnblack, the functions again all appear to be strictly linear. For the time being, we will assume linearity and retain all of the continuous variables in log metric. We will concern ourselves with a log‐log model of the form:
+
+\footnotesize
+$$\text{ln(Violence}_{i}) = \beta_{0} + \beta_{1}ln(\text{Poverty}_{i})+\beta_{2}ln(\text{College}_{i})+ \beta_{3}ln(\text{Black}_{i})+\beta_{4}ln(\text{Urban}_{i})+\beta_{5}\text{Region}_{i}+\epsilon_{i}$$
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+In this model, the slopes for the log‐transformed regressors (lnpoverty, lncollege, lnblack, lnurban) are all known as “elasticities,” and they represent the percentage difference in Yi for two hypothetical observations which differ by one percent in $X_{i}$. 
+
+The slopes for the dummy regressors (region) represent proportional differences in violent crime between the noted region and the reference region. 
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+\tiny
+```{r,}
+with(state_data00, summary(lm(lnviolrate~lnpovrate+lncollege+lnblack+lnurban+region)))
+```
+
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+Note that elasticities are more often multiplied by 10 to make their interpretation meaningful. 
+
+Let's focus on the coefficient for lnpovrate. It indicates that a state possessing a poverty rate that is 10% higher than a counterpart state (say, 11% poverty versus 10% poverty, or 22% versus 20%) has a violent crime rate that is 3.7% higher, on average and all else equal. 
+
+NOTE: Technically, for a state with 10% higher poverty, the percent difference in the violent crime rate is $100*{[110/100]^{0.370}-1} = 3.59\%)$. 
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+With respect to the regional dummies, the slopes are best multiplied by 100 to give them a **percent difference** interpretation. 
+
+For example the coefficient for West indicates that the violent crime rate of Western states is 41% higher than Southern states, on average and all else equal. 
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lcc}
+\hline
+Regressor & Standard Model & Log-Log Model \\ \hline
+Poverty & 14.998(8.271)+ & .370 (.213)+ \\
+College & -.092(5.907) & .087(.318) \\
+Black & 6.721(3.159)* & .303(.062)*** \\
+Urban & 4.474(1.093)*** & .262(.190) \\
+Midwest & -42.703(66.370) & -.016(.138) \\
+Northeast & -126.036(75.507) & -.084(.168) \\
+West & 5.107(73.217) & .410(.168)* \\ \hline
+$R^{2}$ & 0.600 & 0.743 \\ \hline
+\multicolumn{2}{l}{+p<.10; *p<.05; ** p<.01; *** p<.001} \\
+\end{tabular}
+\end{table}
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+In addition to altering the metric of the model, the natural logarithm has one characteristic that can be advantageous. Namely, it can accommodate a relationship between $X_{i}$ and $Y_{i}$ that is fundamentally non-linear. 
+
+Let's return to the regressor for percent black, for which we have already seen that violent crime exhibits mild non-linearity. 
+
+We will inspect two scatterplots - one which keeps **violrate** and **black** in their original metric and one which performs a log-transformation on both.
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+```{r, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=black, y=violrate)) + 
+  geom_point() +
+  geom_smooth(method="loess", se=F, linetype="dashed", color="darkred")
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+```{r, message=FALSE, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(state_data00, aes(x=lnblack, y=lnviolrate)) + 
+  geom_point() +
+  geom_smooth(method="loess", se=F, linetype="dashed", color="darkred")
+```
+
+## Assumptions Concerning the Response Variable - Logarithmic Model
+
+Interestingly, the log-log scatterplot linearizes the relationship between percent black and violent crime rates. 
+
+While there remains very mild non-linearity in the log-log scatterplot, the fact that the regression line is always increasing (i.e., there is no inflection point) indicates that we could preserve degrees of freedom by estimating a log-log model as opposed to a polynomial model.
+
+## Assumptions Concerning the Response Variable - Additivity
+
+A second functional form assumption is that the relationship between $X_{i}$ and $Y_{i}$ does not depend on the value of one or more other regressors. 
+
+## Assumptions Concerning the Response Variable - Additivity
+
+Suppose we have reason to believe that states which are more urbanized have higher violent crime rates, but this relationship is magnified in the South, where we believe that the percent of the population living in urban areas is even more positively correlated with violence. 
+
+We can see this in a scatterplot of violence against percent urban, both of which are retained in their original metric for the time being:
+
+## Assumptions Concerning the Response Variable - Additivity
+
+```{r, add_plot, message=F, echo=F, fig.align='center', fig.height=2.5, fig.width=5}
+state_data00$south<-ifelse(state_data00$region=="South",1,0)
+ggplot(state_data00, aes(x=urban, y=violrate, group=as.factor(south),
+                         color=as.factor(south))) +
+  geom_point() +
+  geom_smooth(method='lm', se=F)
+```
+
+## Assumptions Concerning the Response Variable - Additivity
+
+Now consider the fully specified regression model in log‐log form:
+
+\tiny
+$$ln(\text{Violence}_{i}) = \beta_{0} + \beta_{1}  ln(\text{Poverty}_{i}) + \beta_{2} ln(\text{College}_{i}) + \beta_{3} (\text{Black}_{i}) + \beta_{4} ln(\text{Urban}_{i}) + \beta_{5} (\text{Region}_{i}) + \beta_{6} ln(\text{Urban}_{i} * (\text{Region}_{i} = South) + \epsilon_{i}$$
+
+## Assumptions Concerning the Response Variable - Additivity
+
+\tiny
+```{r, echo=F}
+state_data00$region<-relevel(state_data00$region, ref="Northeast")
+summary(lm(lnviolrate~lnpovrate+lncollege+lnblack+lnurban+region+ south*lnurban, data=state_data00))
+```
+
+## Assumptions Concerning the Response Variable - Additivity
+
+The slope for the relationship between lnurban and lnviolrate is obtained by differentiating the equation with respect to lnurban, and is provided by the formula:
+
+$$\frac{\partial ln(\text{Violence}_{i})}{\partial ln(\text{Urban}_{i})} = \beta_{4} + \beta_{6}(\text{Region}_{i}=\text{South}) = 0.044 * 0.816 (\text{Region}_{i} = \text{South})$$
+
+## Assumptions Concerning the Response Variable - Additivity
+
+There are two different slopes, one for non‐southern states and one for southern states:
+
+\begin{equation}
+  \frac{\partial ln(\text{Violence}_{i})}{\partial ln(\text{Urban}_{i})} = 
+  \begin{cases}
+    0.044 \text{ if Region}_{i} \ne \text{South} \\
+    0.860 \text{ if Region}_{i} = \text{South}
+  \end{cases}
+\end{equation}
+
+## Assumptions Concerning the Response Variable - Additivity
+
+Notice that, for non‐southern states, the relationship between percent urban and violence is not statistically significant. 
+
+In southern states, on the other hand, there is a strong positive relationship, indicating that southern states with 10% higher percent urban (e.g., 33% versus 30%, or 55% versus 50%) have 8.6% higher violent crime rates. 
+
+NOTE: Technically, $100 * [{110/100}^{0.816}-1]=8.09\%$.
+
+## Assumptions Concerning the Response - Reliable Measurement 
+
+It is important that the response variable be perfectly measured. However, measurement error will not introduce any bias into the model as long as that error is random. Instead, it will only make the regression coefficients less precise by inflating the model variance. Assume that the model we want to estimate is as follows:
+
+$$Y_{i} = \alpha + \beta X_{i} + \epsilon_{i}$$
+
+## Assumptions Concerning the Response - Reliable Measurement 
+
+However, assume that the response variable is measured with error, so we measure $Y_{i}$ when we actually want to measure the true $Y_{i}^{*}$:
+
+$$Y_{i} = Y_{i}^{*} + \mu_{i}$$
+
+## Assumptions Concerning the Response - Reliable Measurement 
+
+The regression model written in terms of $Y_{i}$ therefore becomes: 
+
+\begin{align}
+Y_{i} &  = \alpha + \beta X_{i} + \epsilon_{i} + \mu_{i} \\
+&  = \alpha + \beta X_{i} + \omega_{i} 
+\end{align}
+
+where $$\omega_{i} = \epsilon_{i} + \mu_{i}$$
+
+## Assumptions Concerning the Response - Reliable Measurement 
+
+The residual in this model, $\omega_{i}$, has more variability than the residual in the theoretical model, $\epsilon_{i}$. The only consequence of random noise is therefore larger standard errors. 
+
+## Assumptions Concerning the Response - Reliable Measurement 
+
+However, the issue becomes more complicated if the measurement error is non-random, meaning that it is correlated with one or more regressors, In this case, the $\mu_{i}$ represents an omitted variable that is potentially correlated with $X_{i}$, which will introduce bias in the coefficient for $X_{i}$. 
+
+We'll return to this in the next section when we discuss unreliable measurement and endogeneity in the regressors. 
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+A key assumption for identifiability of the regression model is linear independence of the regressors. 
+
+Specifically, a regressor cannot be a perfect linear combination of other regressors, and the regressors cannot be perfectly correlated with each other. 
+
+Another way to express this is to say that the matrix of regressors must have “full column rank.” 
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+Perfect linear dependence characterizes a categorical variable which is coded into dummy variables. 
+
+This is the reason that, when we perform regression with dummy regressors, we must omit the dummy variable for one of the categories, which is labeled the reference category. 
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+Consider the census region example used earlier. Perfect linear dependence arises because, once we know that a state is coded 0 on neast, mwest, and south, it must be coded 1 on west. 
+
+So the sum of all four dummy variables is 1 for all states, which means there is a perfect linear combination of the dummy regressors unless one of them is excluded from the model.
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+It is easy to know if perfect linear combinations of regressors exist because the regression model will break down when it is estimated. 
+
+On the other hand, we can still estimate the regression model if we have high correlations among any of the regressors, and it can create problems. 
+
+High correlations lead to a problem known as **multicollinearity**, and it can make regression coefficients highly unstable. The first place to start is with an examination of a correlation matrix of the variables included in the model. We are looking for unusually high correlations.
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+\scriptsize
+```{r, echo=F}
+state_data00$neast<-ifelse(state_data00$region=="Northeast",1,0)
+state_data00$mwest<-ifelse(state_data00$region=="Midwest",1,0)
+state_data00$west<-ifelse(state_data00$region=="West",1,0)
+df_reg<-with(state_data00, data.frame(lnpovrate, lncollege, lnblack, lnurban,
+                                      neast, mwest, south, west))
+cormat<-round(cor(df_reg),2)
+cormat
+```
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+None of these correlations gives cause for alarm. 
+
+However, a disadvantage of this diagnostic approach is that it only provides information about collinearity problems which are bivariate. 
+
+If there are linear combinations of three or more variables, an alternative test is required. After the model is estimated, we can inspect the variance inflation factors (VIFs). One general rule is to be concerned about a VIF that exceeds 2.0 and especially one that is in proximity to 5.0.
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+There might be a reason to be concerned about collinearity problems in this model. 
+
+The highest VIF is for lnblack, but this regressor is already statistically significant, so it does not seem that multicollinearity is creating any efficiency problems for this variable. 
+
+On the other hand, notice that lnurban and the regional dummies all have VIFs larger than 2.0, and the dummy regressor for southern states has a modestly large VIF. 
+
+\small
+```{r, echo=F}
+vifs<-vif(lm(lnviolrate~lnpovrate+lncollege+lnblack+
+               lnurban+mwest+south+west,
+             data=state_data00))
+vifs
+```
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+The following table examines several specifications of the basic regression model (regression output is not shown):
+
+\scriptsize
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lcccc}
+\hline
+& Model A & Model B & Model C & Model D \\
+Regressor & All Variables & Black Excluded & Region Excluded & Region Modified \\ \hline \hline
+Poverty & .370(.213)+ & .436(.263) & .566(.227)* & .368(.199)+ \\
+College & .087(.318) & -.070(.392) & -.001(.015) & .038(.300) \\
+Black & .303(.062)*** & --- & .208(.046)*** & .318(.049)*** \\
+Urban & .262(.190) & .949(.159)*** & .008(.003)* & .232(.176) \\
+Region & & & & \\
+Midwest & .068(.136) & .217(.164) & --- & --- \\
+South & .084(.168) & .547(.173)** & --- & --- \\
+West & .484(.133)*** & .349(.160)* & --- & .457(.112)*** \\ \hline
+$R^{2}$ & 0.743 & 0.596 & 0.642 & 0.741 \\
+Mean VIF & 2.61 & 1.89 & 1.79 & 1.99 \\ \hline
+\multicolumn{5}{l}{+ p<.10; * p<.010; ** p<.05; *** p<.001} 
+\end{tabular}
+\end{table}
+
+## Assumptions Concerning the Regressors - Linear Independence
+
+The pattern of results suggests that regional differences in violence arise largely because of regional differences in such things as poverty, education, racial composition, and percent urban. 
+
+Interestingly, the first and final models indicate that western states have significantly higher violent crime rates than would be predicted based on their profile on these continuous regressors. 
+
+When all is said and done, however, the original model (Model A) does not appear to be severely plagued by multicollinearity.
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+The assumptions concerning the measurement properties of the regressors are more salient than the measurement properties of the response variable. 
+
+This is because measurement error in one or more regressors, even if it is random, introduces bias in the coefficients as opposed to just imprecision. 
+
+We’ll begin with the simplest case – classical measurement error. This refers to measurement error which is independent of both the true variable and the residual. 
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+To formalize this, let’s say that our data reveal $X_{i}$ when we actually want to measure the true $X^{*}_{i}$.
+
+$X_{i} = X^{*}_{i}+\nu_{i}$
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+So instead of estimating the regression model we want with the true $X^{*}_{i}$ on the right hand side, we actually end up estimating:
+
+\begin{align}
+Y_{i} & = \alpha \beta(X_{i} - \nu_{i}) + \epsilon_{i} \\
+& = \alpha + \beta X_{i} + \epsilon_{i} - \beta \nu_{i} \\
+& = \alpha + \beta X_{i} + \psi_{i} 
+\end{align}
+
+where 
+
+$$\psi_{i} = \epsilon_{i} - \beta \nu_{i}$$
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+In the case of classical measurement error, or measurement error that is random, we assume that:
+
+$$\nu_{i} \perp X^{*}_{i}$$
+
+and 
+
+$$\nu_{i} \perp \epsilon_{i}$$
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+It can be shown that the OLS estimator of $\beta$ is biased downward (and is inconsistent, meaning that the bias does not lessen as the sample size gets infinitely large):
+
+$$b \rightarrow \beta * \frac{\sigma^{2}_{X^{*}}}{\sigma^{2}_{X^{*}}+\sigma^{2}_{\nu}}$$
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+The ratio in parentheses represents the **reliability** of $X_{i}$, and is always less than (or equal to) one, which leads to an *attenuation bias* in OLS. It means that the noisier the measure, the worse the attenuation. 
+
+Additionally, when there are other regressors in the model, bias pervades the other coefficients, even if the other regressors are perfectly measured. 
+
+## Assumptions Concerning the Regressors - Reliable Measurement
+
+Things get much less predictable when the measurement error is not random, for example, when it is correlated with the true $X_{i}^{*}$. 
+
+Because the measurement error is absorbed by the residual, the model now suffers from omitted variables bias, because $X_{i}$ will be correlated with the residual. We will consider omitted variables bias next.
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+The exogeneity assumption is another way of saying that the regressors should not be correlated with the residual, or that there is no omitted variables bias. 
+
+If we were able to conduct an experiment in which we randomized the values of $X_{i}$, this assumption would be met by definition. 
+
+Formally, the regression model requires that:
+
+$$E(X_{i}, \epsilon_{i}$$
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+Let's consider the following two models:
+
+True model: $$Y_{i} = \alpha + \beta X_{i} + \gamma Z_{i} + \epsilon_{i}$$
+
+Estimated model: $$Y_{i} = \alpha^{*} + \beta^{*}X_{i} + \epsilon^{*}_{i}$$
+
+Where the error in the estimated model is: $$\epsilon^{*}_{i} = \gamma Z_{i} + \epsilon_{i}$$
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+If $Z_{i}$ is uncorrelated with $X_{i}$, there is no omitted variables bias. Bias in the estimator for $\beta$ arises when $Z_{i}$ and $X_{i}$ are correlated. 
+
+In fact, the expected value of the OLS estimator when $Z_{i}$ is excluded is:
+
+$$E(b) = \beta + \gamma \frac{\text{Cov}(X_{i}, Z_{i})}{\text{Var}(X_{i})}$$
+
+The second term represents the bias, and it reveals that, assuming $\gamma \ne 0$, OLS remains unbiased when $Z_{i}$ is excluded if and only if $\text{Cov}(X_{i},Z_{i}) = 0$. 
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+Unfortunately, there is no foolproof method of diagnosing endogeneity or omitted variables bias. One method that is occasionally encountered is called a RESET test (**regression specification error test**), which involves supplementing the model with a polynomial function of the fitted values from the baseline model:
+
+Baseline Model: $Y_{i} = \beta_{0} + \beta_{1}X_{i1}+\beta_{2}X_{i2} + \beta_{3}X_{i3} + \epsilon_{i}$
+
+Supplementary Model: $Y_{i} = \beta_{0}^{*} + \beta^{*}_{1}X_{i1} + \beta^{*}_{2}X_{i2} + \beta^{*}_{3}X_{i3} + \beta^{*}_{4}\hat{Y}^{2}_{i} + \beta^{*}_{5}\hat{Y}^{3}_{i} + \beta^{*}_{6}\hat{Y}^{4}_{i} + \epsilon_{i}$
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+The RESET test is the joint significance of the coefficients for the polynomials, i.e., a test of the null hypothesis that $\beta_{4} = \beta_{5} = \beta_{6} = 0$ against the alternative that at least one coefficient is non‐zero.
+
+Rejection of the null hypothesis indicates that the baseline model might be misspecified. 
+
+Note that a different order of the polynomial can be easily specified (e.g., a cubic rather than quartic function), and the RESET test is adjusted accordingly.
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+```{r, echo=F}
+resettest(lnviolrate~lnpovrate+lncollege+lnblack+lnurban+region, type="regressor", data=state_data00, power=2)
+```
+
+Based on this diagnostic, we have little reason to be concerned about model misspecification.
+
+## Assumptions Concerning the Regressors - Exogeneity
+
+Note that this test is agnostic about the nature of the misspecification, and provides no guidance about the appropriate alternative model. 
+
+For example, had we rejected the null hypothesis, we would not know whether it was necessary to include a polynomial function of one or more regressors, or whether there were omitted variables that were biasing the estimator.
+
+## Assumptions Concerning the Residuals - Zero Mean
+
+This assumption is related to the exogeneity assumption and is what allows us to generate the expected of $Y_{i}$ as: 
+
+$$E(Y_{i}) = \beta_{0} + \beta_{1}E(X_{i1})+...+\beta_{j}E(X_{ij})$$
+
+This is because the expected value of the residual, conditional on $X_{ij}$, is assumed to be zero:
+
+$$E(\epsilon_{i} \mid X_{i1}, ..., X_{ik})=0$$
+
+## Assumptions Concerning the Residuals - Zero Mean
+
+Violation of the assumption does not have any bearing on any of the coefficients except for the constant. The slope coefficients remain unbiased, as long as the other model assumptions are met. 
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+The assumption of **homoscedasticity** is the assumption of constant variance of the residuals, conditional on the regressors. Formally, this assumption is represented as: 
+
+$$V(\epsilon_{i} \mid X_{i1},...,X_{ik}) = E(\epsilon^{2}_{i} \mid X_{i1},...,X_{ik}) = \sigma^{2}_{\epsilon} \text{ } \forall \text{ } i$$
+
+We can evaluate violation of the constant variance assumption by plotting the residuals against the model-fitted values. We are looking for any evidence that the residuals fan out.
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+```{r, echo=F, fig.align='center', fig.height=2.5, fig.width=5}
+lm2<-lm(lnviolrate~lnpovrate+lncollege+lnblack+lnurban+region,
+        data=state_data00)
+ggplot(, aes(x=lm2$fitted.values, y=lm2$residuals)) +
+  geom_point() + 
+  geom_hline(yintercept=0, color='red', linetype='dashed')
+```
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+In this figure, heteroscedasticity is difficult to judge, although it does not appear to be a major problem. 
+
+There are a couple of numerical tests that we can employ. A caveat, though, is that these tests are sensitive to the normality assumption, which we have not yet evaluated for this model. 
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+\tiny
+```{r, echo=F}
+bptest(lm2)
+ols_test_score(lm2)
+```
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+By these criteria, the residuals appear to be homoscedastic. 
+
+Had we concluded otherwise, it would have been wise to use the coeftest() function in the lmtest package to estimate heteroscedasticity-robust standard errors, or what are also known as Huber-White standard errors. 
+
+These are appropriate for arbitrary forms of heteroscedasticity. In fact, robust standard errors are generally a good idea in any regression model.
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+Regular Standard Errors:
+\tiny
+```{r, echo=F}
+summary(lm2)
+```
+
+## Assumptions Concerning the Residuals - Homoscedasticity
+
+Robust Standard Errors:
+\tiny
+```{r, echo=FALSE}
+coeftest(lm2, vcov=vcovHC, type="HC1")
+```
+
+## Assumptions Concerning the Residuals - Serial Independence
+
+The assumption of serially independent residuals is also known as the assumption of no autocorrelation. 
+
+Serial independence is really an assumption about the sampling process. If there is any kind of *clustering* of observations in space or time (e.g., cluster samples, panel data), this will create biased variance estimates. 
+
+## Assumptions Concerning the Residuals - Serial Independence
+
+Formally, the assumption of serial independence is represented as: 
+
+$$E(\epsilon_{i} \epsilon_{j} \mid X_{i1},...,X_{ik}) = 0 \text{ } \forall \text{ } i \ne j$$
+
+## Assumptions Concerning the Residuals - Serial Independence
+
+With state-level data that are cross sectional, there is a distinct possibility of serial (spatial) dependence, because neighboring states might be more like one another than non-contiguous states. Resolving this complexity is beyond the focus of this lecture. 
+
+It suffices to say that there is indeed spatial dependence in violent crime rates. It is likely that the inclusion of the regional dummies in the regression model are capable of absorbing much of this spatial dependence, anyhow. We can examine whether this is true by clustering the standard errors by region, as so:
+
+## Assumptions Concerning the Residuals - Serial Independence
+
+\tiny
+```{r, echo=F}
+summary(lm2)
+coeftest(lm2, vcov=vcovCL,
+         cluster=~region)
+```
+
+## Assumptions Concerning the Residuals - Serial Independence
+
+There does appear to be some spatial dependence here as the errors for different regressors (including the regional dummies) can vary quite a bit if we cluster our errors by region. 
+
+Although our primary inferences remain fairly similar, the results suggest a more appropriate model may be one that accounts for spatial dependence in the outcome - the clustering of standard errors is just one way to do this. 
+
+There are other options, like spatial autoregression models, that are beyond the scope of this lecture. 
+
+## Assumptions Concerning the Residuals - Normality
+
+Normality of the residuals is not a required assumption of the linear model. 
+
+Even if this assumption is violated, the estimates from the model are still unbiased and efficient. 
+
+Rather, approximate normality is only necessary for hypothesis testing because a distributional assumption is made in order to compute p-values for the refression coefficients. 
+
+## Assumptions Concerning the Residuals - Normality
+
+Formally, the assumption is:
+
+$$\epsilon_{i} \mid X_{i1},...,X_{ik} \sim N(0, \sigma^{2}_{\epsilon})$$
+
+In practice, of course, we rely on the t-distribution rather than the z-distribution, with df=k, in order to estimate the p-values. 
+
+We can assess normality with a kernel density plot of the residuals, which is like a histogram, but with very narrow bins. The normal density can be overlaid to assess the degree to which the residuals depart from normality:
+
+## Assumptions Concerning the Residuals - Normality
+
+```{r, echo=F, fig.align='center', fig.height=2.5, fig.width=5}
+ggplot(data=data.frame(residuals<-lm2$residuals),aes(x=residuals)) + 
+  geom_density() + 
+  stat_function(fun=dnorm, color='red', linetype='dashed',
+                args=list(mean=mean(residuals),
+                          sd=sd(residuals)))
+```
+
+## Assumptions Concerning the Residuals - Normality
+
+As you can see, the log-log model performs quite well with respect to the normality assumption. An alternative to the density plot is a standardized normal probability plot, in which case we would like to see the data points line up along the diagonal:
+
+## Assumptions Concerning the Residuals - Normality
+
+```{r, echo=F, fig.align='center', fig.height=2.5, fig.width=5}
+ggqqplot(lm2$residuals)
+```
+
+## Assumptions Concerning the Residuals - Normality
+
+A formal test of the normality of the residuals is provided by the Shapiro-Wilk test (among others):
+
+```{r, echo=F}
+shapiro.test(lm2$residuals)
+```
+
+The test confirms our visual diagnosis of no serious evidence of non-normality. 
+
+## Two Questions
+
+\begin{center}
+\begin{huge}
+What are your two questions today?
+\end{huge}
+\end{center}
+
+\begin{center}
+\includegraphics[scale=.40]{rick_morty_tired2.png}
+\end{center}

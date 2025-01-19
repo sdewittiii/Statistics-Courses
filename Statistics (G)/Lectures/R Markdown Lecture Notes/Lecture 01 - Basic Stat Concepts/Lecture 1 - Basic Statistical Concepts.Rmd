@@ -1,0 +1,82 @@
+---
+header-includes:
+-  \usepackage{amsmath}
+-  \usepackage{setspace}
+-  \doublespacing
+-  \usepackage{lineno}
+-  \linenumbers
+-  \usepackage[utf8]{inputenc}
+-  \usepackage{pander}
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Basic Statistical Concepts
+
+1. Categories of statistics
+2. Basic statistical definitions
+3. Variable measurement
+4. Variable classification
+5. A note on rounding
+
+### Categories of Statistics
+
+* **Descriptive statistics (data reduction)** - *the branch of statistics that is concerned with describing, displaying, and summarizing data*. These are numerical and graphical methods that facilitate interpretation of a large amount of data. These techniques reduce a series of numbers fown to a small number of more convenient and more easily communicated descriptive terms. In a sense, descriptive statistics provide a "snapshot" of a group of data. 
+
+* **Inferential statistics (decision making, hypothesis testing)** - *the branch of statistics that is concerned with making inferences from sample data to a population*. In essence, statistical inference involves generalizing on the basis of limited information. As such, there is bound to be error in making these generalizations (measurement error, sampling error). Inferential statistics allow us to take into account this uncertainty and to make generalizations with a reasonable amount of confidence. 
+
+* Let's consider an example. The university issues me a class roster. From this roster I can use counts, ratios, percentages, or averages to describe the characteristics of this class (*e.g., gender, year in school, major, residency status, grade point average*.) This is the idea behind descriptive statistics. They provide a snapshot of the composition of this specific class. Now, what if I wanted to generalize this class information to the whole campus? Suppose I want to know the gender composition and GPA of the average student at UNC Charlotte. Assuming that this class is representative of all UNC Charlotte classes (*which it probably is not*), I can use inferential statistics to estimate these quanitites for the entire student body. 
+
+### Basic Statistical Definitions
+
+* **Population** - *the largest set of cases of people in which a researcher is actually interested*. For example, we may want to ask questions about the entire U.S. population, about all youths aged 12 to 16, about all single-parent families, about all persons arrested by the police, about all sentencing decisions made by judges, about all women, etc... There are several practical problems with collecting information on a whole population including time, cost, and the fact that it is sometimes impossible to get information on an entire population. 
+
+* **Sample** - *a subset of the population that a researcher uses to make generalizations about the population*. In essence, we want to use what we know about a sample to understand what we do not know about a population. 
+
+* **Random selection (probability sampling)** - *a way of ensuring that a sample is representative of the population from which it is drawn*. In a simple random sample, each element of the population has a known, non-zero,. independent, and equal probability of being selected into the sample. There are other types of random sampling procedures that are commonly used, such as systematic random sampling, weighted sampling, and multistage cluster sampling. You should note that there are no statistical techniques that we can se to make a non-representative sample more representative of the population. 
+
+* **Parameter** - *an unknown (but knowable) characteristic of the population of interest*. This characteristic is fixed; we assume that there is one true value, or "right" answer. But, for a variety of reasons we don't know what the right answer is, so we use various statistical techniques to estimate the paramter. 
+
+* **Statistic** - *a characteristic derived from sample data that is an estimate of a population parameter*. A statistic represents our "best guess" as to the value of an unknown parameter. It should be mentioned that a sample statistic can and will vary from one sample to the next. This means that there is error in estimating the true population parameter. This becomes an important idea when we move to statistical inference. 
+
+<center>
+``` {r Diagram of Statistical Inference, echo=FALSE}
+library(DiagrammeR)
+grViz("
+      
+digraph neato {
+
+graph [layout=neato]
+
+node [shape=oval]
+Population [pos='0,3!'] 
+Parameter [pos='3,3!']
+
+node[shape=box]
+Sample [pos='0,0!']
+Statistic [pos='3,0!']
+
+Population->Sample Population->Parameter
+Sample->Statistic Statistic->Parameter
+}
+")
+```
+</center>
+
+### Variable Measurement
+
+* **Unit of observation** - *the element that is being studied or observed and, thus, the level at which data are collected*. In much criminological research the individual is the unit of observation. For example, suppose you are interested in studying whether youths who make poor grades in school are more likely to smoke cigarettes or skip classes. We want to know if participation in a drug treatment program reduces subsequent drug use. We want to know if gender, race, and class influence sentencing decisions. We want to know if citizens have favorable attitudes toward community policing intiatives. The list goes. However, sometimes aggregate units are studied such as the family, neighborhood, census tract, state, or country. For example, we want to know if increasing globalization is related to crime rates across countries. We want to know if neighborhood social disorganization causes violent crime. We want to know if greater per capita expenditure on policing has crime-control benefits in urban areas. So on and so forth. 
+
+* **Variable** - *an attribute or characteristic that can take on different values from one unit of observation to another or from one point in time to another*. An example of a variable in this classroom is sex since it can take on the value of male or female. In other words, sex varies from one person to another in this classroom. The same goes age, number of credits completed in the CJ grad program, and the list goes on...
+    + Often, a variable is some phenomenona that a researcher is trying to learn something about. For example, crime is a variable, it can take on the value of zero offenses, one offense, two offenses, and so on. As a researcher, I am interested in trying to explain why the number of crimes committed varies from one person to another. 
+    
+* **Constant** - *an attribute that does not vary*. For example, in this class, everyone is enrolled in statistics, so this would be a constant. Enthusiasm for statistics is also a constant, since everyone is equally excited to be taking this class. If I took a sample of male 21-year olds, gender and age would be constants. If I took a sample of inmates, having a prior arrest would be a constant, since everyone in the sample would have been arrested, by definition. 
+
+* It is important to keep in mind that *a phenomenon can be both a variable and a constant at different times, depending upon the context of the research*. 
+
+### Variable Classification
+
+* 

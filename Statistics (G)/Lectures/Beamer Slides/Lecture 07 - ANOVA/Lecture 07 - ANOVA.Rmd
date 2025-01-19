@@ -1,0 +1,674 @@
+---
+title: "Lecture 07 - Analysis of Variance"
+author: "Samuel DeWitt"
+output:
+ beamer_presentation:
+    includes:
+      in_header: I:/My Drive/Prepped Courses/Statistics (G)/Lectures/Beamer Slides/Common Files/beamer-header.txt
+classoption: "aspectratio=169"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2); library(tidyverse); library(ggpubr); library(rstatix)
+library(knitr)
+options(scipen=20)
+```
+
+## General Outline
+
+For this lecture, we will be discussing hypothesis testing with three or more population means, also known as analysis of variance (ANOVA). 
+
+1) Logic of ANOVA
+2) Computation of ANOVA
+3) Computing ANOVA in R
+4) Measures of Association
+5) Post-Hoc Tests
+
+## Inference with Three or More Sample Means
+
+Inference with three or more sample means is a fairly simple generalization of the two-sample setup. 
+
+Now, instead of examining the difference between two specific means, we will instead ask if there is a significant amount of variability **between** the set of three or more samples means as compared to the distribution of values **about** these sample means within each sample. 
+
+## Inference with Three or More Sample Means
+
+- Research Question
+    - Do the differences we observe among the sample means indicate that there are significant differences across groups in the population?
+    
+\vspace{12pt}
+
+- Examples
+    - Sentence length as a function of offense type (violent, property, drug, other)
+    - Fear of crime as a function of residential location (urban, suburban, rural)
+    - Offending as a function of family structure (two-parents, single-parent, no biological parents)
+    
+## Inference with Three or More Sample Means
+
+You might ask - why not simply run t-tests between each unique group pairing? $$t=\frac{(\overline{x}_{1}-\overline{x}_{2})}{\sqrt{\frac{s^{2}_{1}}{(n_{1}-1)}+\frac{s^{2}_{2}}{(n_{2}-1)}}}$$
+
+Here's why:
+
+- It's cumbersome
+    - 3 groups: 3 tests; 4 groups: 6 tests; 5 groups: 10 tests
+    
+\vspace{12pt}
+  
+- Probability of committing a type I error on any given test is greater than $\alpha$ (.05, for example)
+    - 3 groups: p=.143; 4 groups: p=.185; 5 groups: p=.226
+    
+## Logic of ANOVA
+
+We want a statistical test that will help us decide whether the observed differences are the result of sampling variation or real differences.
+
+- **An**alysis **o**f **va**riance = ANOVA
+    - Three or more sample means
+    - Global test = joint significance of several means
+    - Constant prob. of type I error ($\alpha$)
+    
+## Why Variance?
+
+- Analysis of Variance
+    - Ratio of the variability **between** groups to the variability **within** groups
+    - New test statistics - the F-ratio
+    
+\vspace{10pt}
+
+\begin{center}
+\includegraphics[scale=.50]{anova_example.png}
+\end{center}
+
+## Why Variance? (cont)
+
+- More variability **within** groups than between
+    - F-ratio < 1.0
+    - Too much overlap, there is no relationship between group membership and the outcome
+    
+\vspace{10pt}
+
+\begin{center}
+\includegraphics[scale=.50]{anova_highvar.png}
+\end{center}
+
+## Why Variance? (cont)
+
+- More variability **between** groups than within. 
+    - F-ratio > 1.0
+    - Little or no overlap, there is a relationship between group membership and the outcome
+    
+\vspace{10pt}
+
+\begin{center}
+\includegraphics[scale=.50]{anova_lowvar.png}
+\end{center}
+
+## New Probability Distribution
+
+- The F-distribution
+    - The ratio of variability **between** groups to variability **within** groups.
+    
+\vspace{10pt}
+
+Large F-ratios (i.e., significantly greater than 1.0) will lead us to reject the null hypothesis of no association between group membership and the outcome of interest. 
+
+## New Calculations - Sum of Squares
+
+- Sum of squares = numerator of variance
+    - Total variation about the **grand mean** ($df_{T} = N-1$)
+$$SS_{T}=\sum{(\text{x}_{ik}-\overline{\text{x}}_{G})^{2}}=\sum{\text{x}^{2}_{ik}-N\overline{\text{x}}^{2}_{G}}$$
+
+- Between-group sum of squares ($df_{B} = k-1$)
+$$SS_{B}=\sum{n_{k}(\overline{\text{x}}_{k}-\overline{\text{x}}_{G})^{2}}=\sum{n_{k}\overline{\text{x}}^{2}_{k}-N\overline{\text{x}}_{G}^{2}}$$
+
+- Within-group sum of squares ($df_{W} = N-k$)
+$$SS_{W}=\sum{(\text{x}_{ik}-\overline{\text{x}}_{k})^{2}}=\sum{\text{x}^{2}_{ik}}-\sum{n_{k}\overline{\text{x}}_{k}^{2}}=SS_{T}-SS_{B}$$
+
+## New Calculations - Sum of Squares
+
+- Total sum of squares ($SS_{T}$)
+    - $SS_{T} = SS_{B}+SS_{W}$
+    
+\vspace{10pt}
+    
+- Mean square (i.e., variance)
+    - Mean square between: $MS_{B} = \frac{SS_{B}}{df_{B}}$
+    - Mean square within: $MS_{W} = \frac{SS_{W}}{df_{W}}$
+    
+\vspace{10pt}
+    
+- F-ratio
+    - $F = \frac{MS_{B}}{MS_{W}}$
+    
+## Practical Example - Offense Type and Sentence Length
+
+\begin{table}[h]
+\centering
+\begin{tabular}{cccc}
+\hline
+Violent & Property & Drug & Other \\ \hline \hline
+6 & 4 & 6 & 1 \\
+18 & 6 & 3 & 3 \\
+20 & 3 & 3 & 1 \\
+15 & 10 & 4 & 1 \\
+20 & 12 & 6 & 6 \\
+30 & 8 & 9 & 9 \\
+25 & 6 & 10 & 3 \\
+12 & 10 & 3 & 6 \\
+24 & 8 & 2 & 2 \\
+20 & 15 & 3 & 4 \\ \hline
+\end{tabular}
+\end{table}
+
+## Quick Note - How to Find $\text{F}_{\text{crit}}$
+
+Much like prior distributions, there are functions in R to calculate critical scores for the F-ratio. The function takes the following form:
+
+qf(p, df1, df2, lower.tail=TRUE/FALSE)
+
+Where **p** is your alpha level, **df1** is the between group degrees of freedom, **df2** is the within group degrees of freedom, and **lower.tail=TRUE/FALSE** returns the upper or lower-tail F-score that leaves that cumulative probability below or above it. 
+
+## Offense Type and Sentence Length - Hypothesis Test
+
+- **Step 1 - Formally state hypotheses**: 
+    - $\text{H}_{1}: \mu_{1} \ne \mu_{2} \ne \mu_{3} \ne \mu_{4}$
+    - $\text{H}_{0}: \mu_{1} = \mu_{2} = \mu_{3} = \mu_{4}$
+    
+\vspace{10pt}
+
+- **Step 2 - Obtain a probability distribution**: 
+    - F-distribution; $df_{B} = k-1 = 4-1 = 3$, $df_{W} = N-k = 40-4 = 36$
+    
+- **Step 3 - Make decision rules**: 
+    - $\alpha = .01$, $F_{crit} = `r round(qf(.01, 4-1, 40-4, lower.tail=FALSE), 3)`$, Reject $H_{0}$ if TS > `r round(qf(.01, 4-1, 40-4, lower.tail=FALSE), 3)`
+    
+## Offense Type and Sentence Length - Hypothesis Test
+
+- **Step 4 - Calculate the test statistic**: 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{cccccccc}
+\hline
+\multicolumn{2}{c}{Violent} & \multicolumn{2}{c}{Property}  & \multicolumn{2}{c}{Drug}  & \multicolumn{2}{c}{Other} \\
+$\text{x}_{1}$  & $\text{x}_{1}^{2}$  & $\text{x}_{2}$  & $\text{x}_{2}^{2}$  & $\text{x}_{3}$  & $\text{x}_{3}^{2}$  & $\text{x}_{4}$  & $\text{x}_{4}^{2}$  \\ \hline \hline
+6 & `r 6^2` & 4 & `r 4^2` & 6 & `r 6^2` & 1 & `r 1^2` \\
+18 & `r 18^2` & 6 & `r 6^2` & 3 & `r 3^2` & 3 & `r 3^2` \\
+20 & `r 20^2` & 3 & `r 3^2` & 3 & `r 3^2` & 1 & `r 1^2` \\
+15 & `r 15^2` & 10 & `r 10^2` & 4 & `r 4^2` & 1 & `r 1^2` \\
+20 & `r 20^2` & 12 & `r 12^2` & 6 & `r 6^2` & 6 & `r 6^2` \\
+30 & `r 30^2` & 8 & `r 8^2` & 9 & `r 9^2` & 9 & `r 9^2` \\
+25 & `r 25^2` & 6 & `r 6^2` & 10 & `r 10^2` & 3 & `r 3^2` \\
+12 & `r 12^2` & 10 & `r 10^2` & 3 & `r 3^2` & 6 & `r 6^2` \\
+24 & `r 24^2` & 15 & `r 15^2` & 3 & `r 3^2` & 4 & `r 4^2` \\ \hline
+190 & 4030  & 82  & 794 & 49  & 309 & 36  & 194 \\
+\hline
+\end{tabular}
+\end{table}
+
+## Offense Type and Sentence Length - Hypothesis Test
+
+There are several pieces of information that we need to obtain to calculate the *F*-statistic. First, we need to compute the group means as well as the grand mean. 
+
+- $\overline{x}_{1}=\sum{\text{x}_{i1}/n_{1}}=190/10=`r 190/10`$
+
+\vspace{2pt}
+
+- $\overline{x}_{2}=\sum{\text{x}_{i2}/n_{2}}=82/10=`r 82/10`$
+
+\vspace{2pt}
+
+- $\overline{x}_{3}=\sum{\text{x}_{i3}/n_{3}}=49/10=`r 49/10`$
+
+\vspace{2pt}
+
+- $\overline{x}_{4}=\sum{\text{x}_{i4}/n_{4}}=36/10=`r 36/10`$
+
+\vspace{2pt}
+
+- $\overline{x}_{G}=\sum{\text{x}_{i}}/N=\frac{190+82+49+36}{10+10+10+10}=`r round((190+82+49+36)/(10+10+10+10),3)`$
+
+## Offense Type and Sentence Length - Hypothesis Test
+
+Second, we need to compute the sums of squares. This step only requires us to find the total sum of squares and between-group sum of squares, which we can use to solve for the within-group sum of squares. 
+
+\scriptsize
+
+- $SS_{T}=\sum{\text{x}^{2}_{ik}-N\overline{\text{x}}^{2}_{G}}=(4030+794+309+194)-40(8.925)^{2}=5327-3168.40=`r round((4030+794+309+194)-(40*(8.925^2)),3)`$
+
+\vspace{2pt}
+
+- $SS_{B}=\sum{\text{n}_{k}\overline{\text{x}}_{k}^{2}}-N\overline{\text{x}}_{G}^{2}=10(19.0)^{2}+10(8.2)^{2}+10(4.9)^{2}+10(3.6)^{2}-40(8.925)^{2}=`r round((10*(19.0^2))+(10*(8.2^2))+(10*(4.9^2))+(10*(3.6^2))-(40*(8.925^2)),3)`$
+
+\vspace{2pt}
+
+- $SS_{W}=\sum{\text{x}^{2}_{ik}}-\sum{\text{n}_{k}\overline{\text{x}}^{2}_{k}}=(4030+794+309+194) - (10*(19.0^2))+(10*(8.2^2))+(10*(4.9^2))+(10*(3.6^2)) = `r round(4030+794+309+194,3)` -`r round((10*(19.0^2))+(10*(8.2^2))+(10*(4.9^2))+(10*(3.6^2)),3)`=`r round((4030+794+309+194)-((10*(19.0^2))+(10*(8.2^2))+(10*(4.9^2))+(10*(3.6^2))),3)`$
+
+## Offense Type and Sentence Length - Hypothesis Test
+
+Third, we use this information to calculate the $F$-statistic. It is convenient to put ANOVA data into the form of a table. 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccc}
+\hline
+Source & SS & $df$ & $MS=SS/df$ & $F=MS_{B}/MS_{W}$ \\ \hline
+Between groups & 1465.875 & $k-1=`r 4-1`$ & `r round(1465.875/3, 2)`  & \\
+Within groups & 674.9 & $N-k=`r 40-4`$  & `r round(674.9/36, 3)` & $\frac{488.62}{18.747}=`r round(488.62/18.747, 2)`$ \\
+Total & 2140.775 & $N-1=`r 40-1`$ & `r round(2140.775/39, 3)` & \\ \hline
+\end{tabular}
+\end{table}
+
+- **Step 5 - Make a decision about the null hypothesis**: 
+    - Reject $H_{0}$, conclude that offense type is significantly associated with sentence length. 
+    
+## Another Example - Residential Location and Fear of Crime
+
+\begin{table}[h]
+\centering
+\begin{tabular}{cccccc}
+\hline
+\multicolumn{2}{c}{Urban} & \multicolumn{2}{c}{Suburban}  & \multicolumn{2}{c}{Rural} \\
+$\text{x}_{U}$  & $\text{x}^{2}_{U}$  & $\text{x}_{S}$  & $\text{x}_{S}^{2}$  & $\text{x}_{R}$  & $\text{x}_{R}^{2}$  \\ \hline
+22  & `r 22^2`  & 23  & `r 23^2`  & 19  & `r 19^2`  \\
+29  & `r 29^2`  & 22  & `r 22^2`  & 24  & `r 24^2`  \\
+31  & `r 31^2`  & 26  & `r 26^2`  & 24  & `r 24^2`  \\
+28  & `r 28^2`  & 25  & `r 25^2`  & 19  & `r 19^2`  \\
+30  & `r 30^2`  & 24  & `r 24^2`  & 20  & `r 20^2`  \\
+32  & `r 32^2`  & 25  & `r 25^2`  & 24  & `r 24^2`  \\
+32  & `r 32^2`  & 24  & `r 24^2`  & 21  & `r 21^2`  \\
+31  & `r 31^2`  & 24  & `r 24^2`  & 17  & `r 17^2`  \\
+28  & `r 28^2`  & 27  & `r 27^2`  & 23  & `r 23^2`  \\
+30  & `r 30^2`  & 23  & `r 23^2`  & 19  & `r 19^2`  \\ \hline
+`r 22+29+31+28+30+32+32+31+28+30` & `r 484+841+961+784+900+1024+1024+961+784+900` & `r 23+22+26+25+24+25+24+24+27+23` & `r 529+484+676+625+576+625+576+576+729+529` &
+`r 19+24+24+19+20+24+21+17+23+19` & `r 361+576+576+361+400+576+441+289+529+361` \\ \hline
+\end{tabular}
+\end{table}
+
+## Residential Location and Fear of Crime - Hypothesis Test
+
+- **Step 1: State hypotheses**
+    - $\text{H}_{1}: \mu_{U} \ne \mu_{S} \ne \mu_{R}$; $\text{H}_{0}: \mu_{U} = \mu_{S} = \mu_{R}$
+    
+- **Step 2: Obtain a probability distribution** 
+    - $F$-distribution, $df_{B}=3-1=`r 3-1`$, $df_{W}=30-3=`r 30-3`$
+    
+- **Step 3: Make decision rules** 
+    - $\alpha=.05$ $F_{crit}= `r round(qf(.05, 3-1, 30-3, lower.tail=FALSE), 3)`$; reject $\text{H}_{0}$ if $F > `r round(qf(.05, 3-1, 30-3, lower.tail=FALSE), 3)`$
+
+## Residential Location and Fear of Crime - Hypothesis Test
+
+- **Step 4: Calculate the test statistic**
+
+- $\overline{x}_{1}=\sum{\text{x}_{i1}/n_{1}}=293/10=`r 293/10`$
+
+\vspace{2pt}
+
+- $\overline{x}_{2}=\sum{\text{x}_{i2}/n_{2}}=243/10=`r 243/10`$
+
+\vspace{2pt}
+
+- $\overline{x}_{3}=\sum{\text{x}_{i3}/n_{3}}=210/10=`r round(210/10, 1)`$
+
+\vspace{2pt}
+
+- $\overline{x}_{G}=\sum{\text{x}_{i}}/N=\frac{293+243+210}{10+10+10}=`r round((293+243+210)/(10+10+10), 2)`$
+
+## Residential Location and Fear of Crime - Hypothesis Test
+
+- **Step 4: Calculate the test statistic**
+
+- $SS_{T}=\sum{\text{x}^{2}_{i}-N\overline{\text{x}}^{2}_{G}}=(8663+5925+4470)-30(24.87)^{2}=`r round((8663+5925+4470)-(30*(24.87^2)),3)`$
+
+\vspace{2pt}
+
+- $SS_{B}=\sum{\text{n}_{k}\overline{\text{x}}_{k}^{2}}-N\overline{\text{x}}_{G}^{2}=10(29.3)^{2}+10(24.3)^{2}+10(21.0)^{2}-30(24.87)^{2}=`r round((10*(29.3^2))+(10*(24.3^2))+(10*(21.0^2))-(30*(24.87^2)),3)`$
+
+\vspace{2pt}
+
+- $SS_{W}=\sum{\text{x}^{2}_{i}}-\sum{\text{n}_{k}\overline{\text{x}}^{2}_{k}}=SS_{T}-SS_{B}=502.493-344.293=`r round(502.493-344.293,3)`$
+
+## Residential Location and Fear of Crime - Hypothesis Test
+
+- **Step 4: Calculate the test statistic**
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccc}
+\hline
+Source          & SS        & $df$            & $MS=SS/df$                              & $F=MS_{B}/MS_{W}$ \\ \hline
+Between groups  & 344.293   & $k-1=`r 3-1`$   & `r round(344.293/2, 3)`  & \\
+Within groups   & 158.2     & $N-k=`r 30-3`$  & `r round(158.2/27, 3)`  & $\frac{172.147}{5.859}=`r round(172.147/5.859, 2)`$ \\
+Total           & 502.493   & $N-1=`r 30-1`$  & `r round(502.493/29, 3)` & \\ \hline
+\end{tabular}
+\end{table}
+
+- **Step 5: Make a decision about the null hypothesis** 
+    - Reject $H_{0}$, conclude that area of residence is related to fear of crime.  
+
+## ANOVA Example - Sentence Length and Offense Type (but this time using R)
+
+In this short section, I am going to show you how to calculate the F-statistic using R and then how to validate that computation with an automatic method. 
+
+## Input Data
+
+```{r senlen_data, echo=TRUE}
+violent<-c(6,18,20,15,20,30,25,12,24,20)
+property<-c(4,6,3,10,12,8,6,10,8,15)
+drug<-c(6,3,3,4,6,9,10,3,2,3)
+other<-c(1,3,1,1,6,9,3,6,2,4)
+```
+
+## Obtain Means
+
+```{r senlen_means, echo=TRUE}
+viol_xbar<-sum(violent)/length(violent)
+prop_xbar<-sum(property)/length(property)
+drug_xbar<-sum(drug)/length(drug)
+oth_xbar<-sum(other)/length(other)
+grand_xbar<-(sum(violent)+sum(property)+sum(drug)+sum(other))/
+  (length(violent)+length(property)+length(drug)+length(other))
+```
+
+**Note** - when the sample sizes are the same for each group the grand mean is the mean of the group means (19+8.2+4.9+3.6)/4 = 8.925. 
+
+## Obtain Sum of Squares
+
+\tiny
+```{r senlen_sos, echo=TRUE}
+viol_sq<-violent^2
+prop_sq<-property^2
+drug_sq<-drug^2
+oth_sq<-other^2
+
+## SS Total
+ss_ttl<-(sum(viol_sq)+sum(prop_sq)+sum(drug_sq)+sum(oth_sq))-
+  ((length(viol_sq)+length(prop_sq)+length(drug_sq)+length(oth_sq))*
+     (grand_xbar^2))
+
+## SS Between
+ss_bet<-((length(violent)*viol_xbar^2)+(length(property)*prop_xbar^2) +
+           (length(drug)*drug_xbar^2)+(length(other)*oth_xbar^2)) -
+  ((length(viol_sq)+length(prop_sq)+length(drug_sq)+length(oth_sq))*
+     (grand_xbar^2))
+
+## SS Within
+ss_with<-(sum(viol_sq)+sum(prop_sq)+sum(drug_sq)+sum(oth_sq)) -
+  ((length(violent)*viol_xbar^2)+(length(property)*prop_xbar^2) +
+           (length(drug)*drug_xbar^2)+(length(other)*oth_xbar^2))
+```
+
+**Note**: You can verify here that ss_ttl - ss_bet = ss_with. 
+
+## Compute the F-ratio
+
+\tiny
+```{r senlen_ftest, echo=TRUE}
+## Mean Square Between
+ms_bet<-ss_bet/(4-1)
+ms_bet
+
+## Mean Square Within
+ms_with<-ss_with/((length(violent)+length(property)+length(drug)+length(other))-4)
+ms_with
+
+## Mean Square Total
+ms_ttl<-ss_ttl/((length(violent)+length(property)+length(drug)+length(other))-1)
+ms_ttl
+
+## Calculate F-Ratio
+f_ratio<-ms_bet/ms_with
+f_ratio
+```
+
+## ANOVA Example - Automatic R Method for Sentence Length Data
+
+\tiny
+
+```{r auto_senlen, echo=TRUE}
+## Create numeric vectors
+violent<-c(6,18,20,15,20,30,25,12,24,20); property<-c(4,6,3,10,12,8,6,10,8,15)
+drug<-c(6,3,3,4,6,9,10,3,2,3); other<-c(1,3,1,1,6,9,3,6,2,4)
+
+## Create Factor Labels
+viol_label<-c(rep("Violent",10)); prop_label<-c(rep("Property",10))
+drug_label<-c(rep("Drug",10)); oth_label<-c(rep("Other",10))
+
+## Create Individual Variables
+senlen<-c(violent, property, drug, other)
+off_type<-c(viol_label, prop_label, drug_label, oth_label)
+
+## Bind Together in One Data Frame
+df<-data.frame(senlen, off_type)
+
+## Estimate and Print ANOVA Results
+senlen_anova<-aov(senlen~off_type, data=df)
+summary(senlen_anova)
+```
+
+A lot easier! But, as before, you may only use this to check your work, not to answer any questions. 
+
+## ANOVA and Measures of Association
+
+ANOVA tells us whether there is a significant relationship between two variables, but it cannot tell us about the strength of the relationship
+
+- Two measures of association
+    - Eta square ($\eta^{2}$)
+    - Epsilon square ($\epsilon^{2}$)
+
+## ANOVA and Measures of Association
+
+- Eta square ($\eta^{2}$)
+$$\eta^{2} = \frac{SS_{B}}{SS_{T}}$$
+
+- Epsilon square ($\epsilon^{2}$)
+$$\epsilon^{2} = 1-\frac{MS_{W}}{MS_{T}}$$
+
+- Explained variance interpretation
+    - Proportion of the total variance in the dependent variable that is **explained** by variation in the independent variable. 
+    
+## Measures of Association - Offense Type and Sentence Length
+
+- Eta square ($\eta^{2}$)
+$$\eta^{2}=\frac{SS_{B}}{SS_{T}}=\frac{1465.875}{2140.775}=`r round(1465.875/2140.775, 3)`$$
+- Epsilon square ($\epsilon^{2}$)
+$$\epsilon^{2}=1-\frac{MS_{W}}{MS_{T}}=1-\frac{SS_{W}/df_{W}}{SS_{T}/df_{T}}=1-\frac{18.75}{54.89}=`r round(1-(18.75/54.89), 3)`$$
+
+- Interpretation
+    - Between 65.8% and 68.5% of the variance in sentence length is explained by offense type.
+    
+## Measures of Association - Residential Location and Fear of Crime
+
+- Eta square ($\eta^{2}$)
+$$\eta^{2}=\frac{SS_{B}}{SS_{T}}=\frac{344.293}{502.493}=`r round(344.293/502.493, 3)`$$
+
+- Epsilon square ($\epsilon^{2}$)
+$$\epsilon^{2}=1-\frac{MS_{W}}{MS_{T}}=1-\frac{SS_{W}/df_{W}}{SS_{T}/df_{T}}=1-\frac{5.859}{17.327}=`r round(1-(5.859/17.327), 3)`$$
+
+- Interpretation
+    - Between 66.2% and 68.5% of the variance in fear of crime is explained by residential location.
+    
+## Post-Hoc Tests
+
+What if I am still interested in those individual group by group contrasts, though?
+
+That is, knowing there's significant between-group variation is helpful, but it still doesn't tell me which groups are different from one another. 
+
+I need a way to maintain the alpha rate at my chosen level and to estimate all the potential group-by-group comparisons in the data. 
+
+## Post-Hoc Tests 
+
+Luckily, there are multiple commands allow for this and we generally refer to them as **Post-Hoc** tests, or tests we estimate after the estimation of some other model. 
+
+The **Post-Hoc** tests for ANOVA models may also be referred to as multiple comparison corrections, as they *correct* for the alpha level issue we discussed earlier in lecture. 
+
+In practice, there are many different multiple comparison correction methods to choose from. I'll just discuss the Bonferroni method in this lecture as it's one of the most commonly used. 
+
+## Post-Hoc Tests - Bonferroni Correction
+
+The Bonferroni correction maintains what is known as a **Family-Wise Error Rate** at or below your selected alpha level through simple division. The correction is just this:
+
+$$\frac{\alpha}{m}$$
+
+Where $\alpha$ is your selected alpha level and $m$ is the number of multiple comparisons you are conducting. 
+
+## Post-Hoc Tests - Finding $m$
+
+Remember the combination calculation we went over weeks ago? I hope so, because you'll need it here. 
+
+To find the number of multiple comparisons I need to conduct to report all group-by-group contrasts I can use the following equation:
+
+$$m=\frac{k!}{2!*(k-2)!}$$
+
+Where $k$ is the total number of categories in the independent variable. Those who remember the combination equation will see that this is just a special case of it where $r$=2 and I have substituted $k$ for $n$. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+There were four groups in this example (violent, property, drug, and other) so let's calculate $m$. 
+
+$$m=\frac{k!}{2!*(k-2)!} = \frac{4!}{2!*(4-2)!} = `r round((factorial(4)/(factorial(2)*factorial(4-2))),3)`$$
+
+\small
+
+We have six total possible comparisons:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+Violent|Property & Property|Drug & Other|Drug \\
+Violent|Drug & Property|Other \\
+Violent|Other
+\end{tabular}
+\end{table}
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+Now, let's figure out the necessary p-value for standard alpha level.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+Alpha Level & Bonferroni Correction & Corrected Alpha Level \\ \hline
+& & \\[-1em]
+$\alpha=.05$ & $\frac{.05}{6}$ & $`r round(.05/6,4)`$ \\
+& & \\[-.5em]
+$\alpha=.01$ & $\frac{.01}{6}$ & $`r round(.01/6,5)`$ \\
+& & \\[-.5em]
+$\alpha=.001$ & $\frac{.001}{6}$ & $`r round(.001/6,6)`$ \\
+& & \\[-1em] \hline
+\end{tabular}
+\end{table}
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+We could apply these new alpha levels manually, run individual t-tests, then obtain probabilities for each observed test statistic or...we could use a function in R that automatically reports the results from post-hoc multiple comparisons tests. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+The function to estimate a Bonferroni correction looks like this:
+
+pairwise.t.test(x, g, p.adjust.method="bonferroni")
+
+Where **x** is the continuous outcome variable from the ANOVA, **g** is the group variable from the ANOVA, and **p.adjust.method="bonferroni"** tells R to use the Bonferroni method for multiple comparisons correction. 
+
+As noted before, the Bonferroni method is one of many, so this syntax could be used to estimate a variety of different multiple comparison corrections.
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+\small
+
+```{r,echo=TRUE}
+with(df, pairwise.t.test(senlen, off_type, paired=FALSE,
+                         p.adjust.method="bonferroni",
+                         pool.sd=FALSE))
+```
+   
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+The values in the table display the adjusted p-values for each comparison. The adjusted p-values represent the probability of observing the test statistic (or a more extreme test statistic) if the null hypothesis is true, after adjusting the probability values for the Bonferroni correction. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+Unfortunately, the table does not display the actual group mean differences as well (nor can I find a function that neatly does so). 
+
+The code on the following slides accomplishes this in a few steps. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+First, I need to revise my data frame so that each column represents a list of sentence lengths for the different types of crimes. The rows are not meaningful at first, but will be by the end of this first block of code. 
+
+\tiny
+```{r, echo=TRUE}
+obs<-c(1:10)
+df<-data.frame(obs, violent, property, drug, other)
+df<- df %>% 
+  gather(key="off_type", value="senlen", violent, property, drug, other) %>% 
+  convert_as_factor(obs, off_type)
+head(df, 5)
+```
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+The data are now in what is usually known as "long" format, but it's not quite the right term for what we have here. 
+
+Typically, "long" format data have multiple rows nested in some aggregated unit - for example, multiple time period observations for a single person. Here, each row is just a person with columns for the offense type they were convicted of and the sentence length they received. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+Terminology issues aside, we can now use a new function (pairwise_t_tests) to automatically detect all of the possible pairwise comparisons and group the results into one object.
+
+I use this new function because the other one (pairwise.t.tests) will not work with the pipe operator (%>%) I use on the next slide to compile the results. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+```{r, echo=TRUE}
+tests <- df %>%
+  pairwise_t_test(senlen~off_type,
+                  paired=FALSE, pool.sd=FALSE,
+                  p.adjust.method="bonferroni",
+                  detailed=TRUE)
+```
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+I don't want paired tests here (which is another way to refer to non-independent samples t-tests) so I set the paired option to FALSE. 
+
+I also do not want the test to assume the variances are equal across groups, so I set pool.sd=FALSE. 
+
+The detailed=TRUE option provides more detailed statistics in the output that you can look at after creating the option. I do not provide a summary of the object here because it does not fit properly on a slide or in a PDF - there are too many columns. 
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+My next step is to display the results - I use a few new functions here to do so. 
+
+- The first is the ggboxplot() function, 
+  - A more direct way of making a box plot that includes points for the individual values. 
+
+- Next, the add_xy_positions() function
+  - This takes the *tests* object I just created and adds xy coordinates to plot p-values. 
+
+\small
+```{r, echo=TRUE}
+tests_plot<- ggboxplot(df, x = "off_type", y = "senlen", add = "point")
+tests<-tests %>% add_xy_position(x="off_type")
+```
+
+## Post-Hoc Tests - Sentence Length and Offense Type
+
+\tiny
+```{r, echo=TRUE, fig.align='center', fig.height=2.42, fig.width=5}
+tests_plot+stat_pvalue_manual(tests, label="p.adj.signif")
+```
+
+## Two Questions
+
+\begin{center}
+\begin{huge}
+What are your two questions today?
+\end{huge}
+\end{center}
+
+```{r homer_gohome, echo=FALSE, fig.align='center', out.height='65%', out.width='75%'}
+include_graphics('homer_gohome.jpg')
+```
+
+
